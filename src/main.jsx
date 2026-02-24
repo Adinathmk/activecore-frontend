@@ -3,15 +3,13 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext.jsx'
+// Note: App.jsx provides the AuthProvider now, so we remove the duplicate from here to avoid issues and simplify.
 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-       <AuthProvider>      {/* ✅ wrap your app here */}
-        <App />
-      </AuthProvider>
+      <App />
     </BrowserRouter>    
   </StrictMode>,
 )
