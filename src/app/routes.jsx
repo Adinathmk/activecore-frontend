@@ -21,10 +21,10 @@ import CartPage from '@/features/cart/pages/CartPage';
 import WishlistPage from '@/features/wishlist/pages/WishlistPage';
 import Orders from '@/features/orders/pages/Orders';
 
-// Core Pages
-import Home from '@/features/core/pages/Home';
-import ContactPage from '@/features/core/pages/ContactPage';
-import About from '@/features/core/pages/About';
+// Marketing Pages
+import Home from '@/features/marketing/pages/Home';
+import ContactPage from '@/features/marketing/pages/ContactPage';
+import About from '@/features/marketing/pages/About';
 
 // Admin Pages
 import Dashboard from '@/features/admin/pages/Dashboard';
