@@ -1,15 +1,11 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { registerUser } from "@/features/auth/authSlice";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import banner from "@/assets/image.avif";
 
 const SignUpPage = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const { loadingRegister } = useSelector((state) => state.auth);
+  const { registerUser, loadingRegister } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -68,12 +64,10 @@ const SignUpPage = () => {
     if (!validate()) return;
 
     try {
-      await dispatch(registerUser(formData)).unwrap();
-
-      toast.success("Account created successfully 🎉");
+      await registerUser(formData);
       navigate("/login");
-    } catch (errorMessage) {
-      toast.error(errorMessage || "Registration failed");
+    } catch (error) {
+      // Toast error handled natively by useAuth
     }
   };
 

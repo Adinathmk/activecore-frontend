@@ -1,14 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "@/features/auth/authSlice";
-import { toast } from "react-toastify";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import banner from "@/assets/image.avif";
 
 const SignInPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { loadingLogin } = useSelector((state) => state.auth);
+  const { loginUser, loadingLogin } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -53,11 +50,10 @@ const SignInPage = () => {
     if (!validate()) return;
 
     try {
-      await dispatch(loginUser(formData)).unwrap();
-      toast.success("Login successful 🎉");
+      await loginUser(formData);
       navigate("/", { replace: true });
-    } catch (errorMessage) {
-      toast.error(errorMessage || "Login failed");
+    } catch (error) {
+      // Toast error is handled inside useAuth now
     }
   };
 

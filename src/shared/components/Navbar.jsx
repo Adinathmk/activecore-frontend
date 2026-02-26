@@ -2,7 +2,7 @@ import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, User as Us
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from '@/features/cart/hooks/CartContext';
-import { useWishlist } from '@/features/wishlist/hooks/WishlistContext';
+import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import SearchProductModal from './SearchProductModal';

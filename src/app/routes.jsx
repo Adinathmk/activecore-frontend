@@ -43,7 +43,7 @@ const AppRoutes = () => {
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/products/:category" element={<Products />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/product/:slug" element={<ProductDetails />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route element={<ProtectProfile />}>

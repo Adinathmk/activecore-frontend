@@ -1,9 +1,10 @@
 const getErrorMessage = (error) => {
-  if (!error.response) {
+  // If the error IS the data payload already (e.g. from Redux rejectWithValue payload)
+  const data = error?.response?.data || error;
+
+  if (error?.isAxiosError && !error.response) {
     return "Network error. Please check your connection.";
   }
-
-  const data = error.response.data;
 
   if (typeof data === "string") {
     return data;
