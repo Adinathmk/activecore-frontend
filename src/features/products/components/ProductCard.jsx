@@ -9,22 +9,21 @@ import {
 } from "@/features/wishlist/wishlistSlice";
 import { useCart } from "@/features/cart/hooks/CartContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";   // ✅ ADD
+import { toast } from "react-toastify";                    // ✅ ADD
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { handleAddToCart, getCartItem } = useCart();
+  const { currentUser } = useAuth();   // ✅ ADD
 
-  // ✅ Product-level heart (ANY variant exists)
   const isWishlisted = useSelector(
     selectIsProductWishlisted(product.id)
   );
 
-  // ✅ Strict default variant (NEVER use product.variant_id)
-  const defaultVariantId =
-    product?.variant_id ||
-    null;
-  console.log(product, "product");
+  const defaultVariantId = product?.variant_id || null;
+
   const isInCartItem = product.is_in_cart;
   const cartItem = getCartItem(product.id);
   const itemCount = cartItem?.quantity || 0;
@@ -36,12 +35,11 @@ export default function ProductCard({ product }) {
   const handleWishlistClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!currentUser) { toast.error("Please login to add items to wishlist");; return; }
 
     if (isWishlisted) {
-      // 🔥 Remove ALL variants of this product
       dispatch(removeProductFromWishlist(product.id));
     } else {
-      // 🔥 Add ONLY one default variant
       if (!defaultVariantId) return;
       dispatch(addToWishlist(defaultVariantId));
     }
@@ -108,21 +106,6 @@ export default function ProductCard({ product }) {
             <span className="text-xs tracking-widest uppercase text-gray-500 font-light">
               Out of Stock
             </span>
-          </div>
-        )}
-
-        {(product.is_new_arrival || product.is_top_selling) && (
-          <div className="absolute top-4 left-4">
-            {product.is_new_arrival && (
-              <span className="bg-black text-white text-xs tracking-wider font-light lg:px-3 lg:py-1.5 md:px-2 md:py-1 uppercase">
-                New
-              </span>
-            )}
-            {product.is_top_selling && !product.is_new_arrival && (
-              <span className="bg-black text-white text-xs tracking-wider font-light px-3 py-1.5 uppercase">
-                Bestseller
-              </span>
-            )}
           </div>
         )}
 
