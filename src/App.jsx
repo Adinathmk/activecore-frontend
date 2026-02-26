@@ -1,15 +1,23 @@
 import { ProductProvider } from '@/features/products/hooks/ProductContext';
-import { AuthProvider } from '@/features/auth/hooks/AuthContext';
 import { WishlistProvider } from '@/features/wishlist/hooks/WishlistContext';
 import { CartProvider } from '@/features/cart/hooks/CartContext';
 import { ToastContainer } from 'react-toastify';
 import ScrollToTop from '@/shared/components/ScrollToTop';
 import AppRoutes from './app/routes';
+import { useDispatch } from "react-redux";
+import React, {  useEffect } from 'react';
+import { loadUser } from "@/features/auth/authSlice";
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+      console.log("App mounted");
+    dispatch(loadUser())    ;
+  }, [dispatch]);
+
   return (
     <ProductProvider>
-      <AuthProvider>
         <CartProvider>
           <WishlistProvider>
             <ToastContainer
@@ -27,7 +35,6 @@ function App() {
             <AppRoutes />
           </WishlistProvider>
         </CartProvider>
-      </AuthProvider>
     </ProductProvider>
   );
 }

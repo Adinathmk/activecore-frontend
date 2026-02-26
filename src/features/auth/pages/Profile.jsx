@@ -3,7 +3,7 @@ import {
   User, Mail, Phone, Edit, Camera, Check,
   ShoppingBag, HelpCircle, Package, Clock, CheckCircle, XCircle
 } from 'lucide-react';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import axiosInstance from '@/services/axiosInstance';
 import { toast } from 'react-toastify';
 

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import axiosInstance from '@/services/axiosInstance';
 import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 const CartContext = createContext();
 

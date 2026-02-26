@@ -6,7 +6,7 @@ import { useCart } from '@/features/cart/hooks/CartContext';
 import axiosInstance from '@/services/axiosInstance';
 import { toast } from 'react-toastify';
 import CheckoutModal from '@/shared/components/BuyingModal';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 const ProductDetails = () => {
   const navigate = useNavigate();

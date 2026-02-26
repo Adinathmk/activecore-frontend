@@ -1,35 +1,22 @@
-import axiosInstance from "@/services/axiosInstance";
+import axios from "@/services/axiosInstance";
+import { AUTH_ENDPOINTS } from "./auth.endpoints";
 
-// Register new user
-export const registerUserAPI = async (userData) => {
-  try {
-    const { data: existing } = await axiosInstance.get(`/users?email=${userData.email}`);
-    if (existing.length > 0) {
-      return { success: false, message: "Email already registered!" };
-    }
-
-    const { data: newUser } = await axiosInstance.post("/users", userData);
-    return { success: true, data: newUser };
-  } catch (error) {
-    console.error("Register API Error:", error);
-    return { success: false, message: error.message };
-  }
+export const loginRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.LOGIN, data);
 };
 
-// Login user
-export const loginUserAPI = async (email, password) => {
-  try {
-    const { data } = await axiosInstance.get(`/users?email=${email}`);
-    if (data.length === 0) return { success: false, message: "User not found" };
-    
-    const user = data[0];
-    if (user.password !== password) return { success: false, message: "Invalid password" };
-    if (user.status==='Blocked') return { success: false, message: "User is Blocked" };  
+export const registerRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.REGISTER, data);
+};
 
-    return { success: true, data: user};
+export const logoutRequest = () => {
+  return axios.post(AUTH_ENDPOINTS.LOGOUT);
+};
 
-  } catch (error) {
-    console.error("Login API Error:", error);
-    return { success: false, message: error.message };
-  }
+export const refreshRequest = () => {
+  return axios.post(AUTH_ENDPOINTS.REFRESH);
+};
+
+export const authMeRequest = () => {
+  return axios.get(AUTH_ENDPOINTS.AUTH_ME);
 };

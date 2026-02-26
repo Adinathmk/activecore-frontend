@@ -2,7 +2,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import Navbar from '@/shared/components/Navbar';
 import PremiumFooter from '@/shared/components/Footer';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function MainLayout() {
   const { currentUser } = useAuth();

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from '@/features/cart/hooks/CartContext';
 import { useWishlist } from '@/features/wishlist/hooks/WishlistContext';
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import SearchProductModal from './SearchProductModal';
 

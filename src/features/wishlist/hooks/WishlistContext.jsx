@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import axiosInstance from '@/services/axiosInstance';
 
-import { useAuth } from '@/features/auth/hooks/AuthContext'; // Import the auth context
+import { useAuth } from '@/features/auth/hooks/useAuth'; // Import the auth context
 
 const WishlistContext = createContext();
 

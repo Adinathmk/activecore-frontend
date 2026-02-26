@@ -1,157 +1,220 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "@/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '@/features/auth/hooks/AuthContext'; // Use AuthContext hook
 import { toast } from "react-toastify";
+import banner from "@/assets/image.avif";
 
 const SignUpPage = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { registerUser } = useAuth(); // Get registerUser from context
+
+  const { loadingRegister } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    first_name: "",
+    last_name: "",
   });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
-  // Handle input change
+  const [errors, setErrors] = useState({});
+
+  // ================= HANDLE CHANGE =================
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
-  // Form validation
+  // ================= VALIDATION =================
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
 
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
+    if (!formData.first_name.trim())
+      newErrors.first_name = "First name is required";
 
-    if (!formData.password.trim()) newErrors.password = "Password is required";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
+    if (!formData.last_name.trim())
+      newErrors.last_name = "Last name is required";
 
-    if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submit
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+
     if (!validate()) return;
 
-    setLoading(true);
-    const response = await registerUser({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role:'user',
-      phone:'',
-      status: "Active",
-      cart:[],
-      wishlist:[],
-      orders:[]
-    });
-    setLoading(false);
+    try {
+      await dispatch(registerUser(formData)).unwrap();
 
-    if (response.success) {
-      toast.success(` Account created successfully for ${response.data.name}`);
-      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
-      setSubmitted(false);
-      navigate("/login"); // Navigate to login after successful signup
-    } else {
-      toast.error(` ${response.message}`);
+      toast.success("Account created successfully 🎉");
+      navigate("/login");
+    } catch (errorMessage) {
+      toast.error(errorMessage || "Registration failed");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white p-6">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">Create Account</h1>
-        <p className="text-gray-600 text-center mb-6">
-          Join us and start your fitness journey 💪
-        </p>
+      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 rounded-xl bg-gray-50 border transition-all duration-200 ${
-              submitted && errors.name ? "border-red-500" : "border-gray-200"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        {/* LEFT SIDE */}
+        <div className="flex-1 p-10">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-10">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Create Account
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Start your fitness journey today 💪
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+
+              {/* FIRST NAME */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${
+                    errors.first_name ? "border-red-500" : "border-gray-200"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="John"
+                />
+                {errors.first_name && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.first_name}
+                  </p>
+                )}
+              </div>
+
+              {/* LAST NAME */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${
+                    errors.last_name ? "border-red-500" : "border-gray-200"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Doe"
+                />
+                {errors.last_name && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.last_name}
+                  </p>
+                )}
+              </div>
+
+              {/* EMAIL */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${
+                    errors.email ? "border-red-500" : "border-gray-200"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="you@example.com"
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* PASSWORD */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${
+                    errors.password ? "border-red-500" : "border-gray-200"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Minimum 8 characters"
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+
+              {/* SUBMIT BUTTON */}
+              <button
+                type="submit"
+                disabled={loadingRegister}
+                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+              >
+                {loadingRegister ? "Creating Account..." : "Sign Up"}
+              </button>
+            </form>
+
+            <div className="text-center mt-6">
+              <p className="text-gray-600">
+                Already have an account?{" "}
+                <button
+                  className="text-blue-600 font-semibold"
+                  onClick={() => navigate("/login")}
+                >
+                  Sign In
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="flex-1 hidden md:block">
+          <img
+            src={banner}
+            alt="Workout Signup"
+            className="w-full h-full object-cover"
           />
-          {submitted && errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 rounded-xl bg-gray-50 border transition-all duration-200 ${
-              submitted && errors.email ? "border-red-500" : "border-gray-200"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-          {submitted && errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 rounded-xl bg-gray-50 border transition-all duration-200 ${
-              submitted && errors.password ? "border-red-500" : "border-gray-200"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-          {submitted && errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-          )}
-
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 rounded-xl bg-gray-50 border transition-all duration-200 ${
-              submitted && errors.confirmPassword ? "border-red-500" : "border-gray-200"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-          {submitted && errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:from-blue-600 hover:to-purple-700 hover:cursor-pointer"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-600 mt-6">
-          Already have an account?{" "}
-          <button
-            className="text-blue-600 font-semibold hover:cursor-pointer"
-            onClick={() => navigate("/login")}
-          >
-            Sign In
-          </button>
-        </p>
+        </div>
       </div>
     </div>
   );

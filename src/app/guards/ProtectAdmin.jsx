@@ -1,5 +1,5 @@
 import React from 'react'
-import { useAuth } from '@/features/auth/hooks/AuthContext'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Navigate, Outlet } from 'react-router-dom'
 
 function ProtectAdmin() {

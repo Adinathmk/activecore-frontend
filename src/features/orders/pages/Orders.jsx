@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '@/features/auth/hooks/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ShoppingBag, X, Package, Calendar, CreditCard, MapPin } from 'lucide-react';
 import axiosInstance from '@/services/axiosInstance';
 
