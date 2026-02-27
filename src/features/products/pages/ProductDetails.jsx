@@ -25,6 +25,7 @@ const ProductDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  
 
   // ── Fetch product by slug ─────────────────────────────────────────────────
   useEffect(() => {
@@ -104,7 +105,7 @@ const ProductDetails = () => {
     if (!derived.activeVariants || !selectedSize) return null;
     return derived.activeVariants.find((v) => v.size === selectedSize) ?? null;
   }, [derived.activeVariants, selectedSize]);
-
+  const maxQuantity = selectedVariant?.available_stock ?? 0;
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -257,13 +258,8 @@ const displayDiscount =
               {/* Wishlist button */}
               <button
                 onClick={handleWishlistClick}
-                disabled={!selectedVariant || selectedVariant.available_stock === 0}
-                className={`absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow transition-all hover:scale-110 ${
-                  !selectedVariant || selectedVariant.available_stock === 0
-                    ? 'opacity-50 cursor-not-allowed hover:scale-100'
-                    : ''
-                }`}
-                title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                disabled={!selectedVariant}
+                className="absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow transition-all hover:scale-110"
               >
                 <Heart
                   className={`w-5 h-5 transition ${
@@ -479,8 +475,22 @@ const displayDiscount =
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="px-4 py-3 text-gray-600 hover:bg-gray-50 transition-colors font-light"
+                    onClick={() =>
+                      setQuantity((q) => {
+                        if (!selectedVariant) return q;
+                        if (q >= maxQuantity) {
+                          toast.info(`Only ${maxQuantity} item(s) available`);
+                          return q;
+                        }
+                        return q + 1;
+                      })
+                    }
+                    disabled={
+                      !selectedVariant ||
+                      maxQuantity === 0 ||
+                      quantity >= maxQuantity
+                    }
+                    className="px-4 py-3 text-gray-600 hover:bg-gray-50 transition-colors font-light disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     +
                   </button>
@@ -518,15 +528,11 @@ const displayDiscount =
               {/* Wishlist CTA below buttons — secondary action */}
               <button
                 onClick={handleWishlistClick}
-                disabled={!selectedVariant || selectedVariant.available_stock === 0}
+                disabled={!selectedVariant}
                 className={`w-full flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl border font-light text-sm transition-all ${
                   isWishlisted
                     ? 'border-red-200 bg-red-50 text-red-500 hover:bg-red-100'
                     : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
-                } ${
-                  !selectedVariant || selectedVariant.available_stock === 0
-                    ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
-                    : ''
                 }`}
               >
                 <Heart

@@ -9,14 +9,14 @@ import {
 } from "@/features/wishlist/wishlistSlice";
 import { useCart } from "@/features/cart/hooks/CartContext";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";   // ✅ ADD
-import { toast } from "react-toastify";                    // ✅ ADD
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { toast } from "react-toastify";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { handleAddToCart, getCartItem } = useCart();
-  const { currentUser } = useAuth();   // ✅ ADD
+  const { currentUser } = useAuth();
 
   const isWishlisted = useSelector(
     selectIsProductWishlisted(product.id)
@@ -35,7 +35,10 @@ export default function ProductCard({ product }) {
   const handleWishlistClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!currentUser) { toast.error("Please login to add items to wishlist");; return; }
+    if (!currentUser) {
+      toast.error("Please login to add items to wishlist");
+      return;
+    }
 
     if (isWishlisted) {
       dispatch(removeProductFromWishlist(product.id));
@@ -75,10 +78,9 @@ export default function ProductCard({ product }) {
     >
       <button
         onClick={handleWishlistClick}
-        disabled={!product.in_stock}   // ✅ disable if out of stock
         className={`absolute top-4 right-4 z-10 group-hover:opacity-100 transition-opacity duration-300 ${
           isWishlisted ? "opacity-100" : "opacity-0"
-        } ${!product.in_stock ? "cursor-not-allowed opacity-50" : ""}`}  // optional visual feedback
+        }`}
       >
         <Heart
           className={`w-5 h-5 transition ${
