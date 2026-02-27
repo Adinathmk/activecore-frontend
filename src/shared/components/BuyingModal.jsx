@@ -92,64 +92,41 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, totalAmount }) => {
     return;
   }
 
-  // ✅ ONLINE PAYMENT VIA RAZORPAY
-  if (!window.Razorpay) {
-    toast.error("Razorpay SDK not loaded!");
-    return;
+  // ✅ ONLINE PAYMENT (Simulated since Razorpay is disconnected)
+  try {
+    const { data } = await axiosInstance.get(`/users/${currentUser.id}`);
+    const orderData = {
+      orderId: `SIM-${Date.now()}`,
+      items: cartItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        type: item.type,
+        price: item.price,
+        gst: (item.price * item.quantity * 0.18).toFixed(2),
+        total: ((item.price * item.quantity) * 1.18).toFixed(2),
+        image: item.images[0]
+      })),
+      totalAmount: totalAmount,
+      date: new Date().toISOString(),
+      status: "Pending",
+      paymentId: "simulated_transaction",
+    };
+
+    await axiosInstance.patch(`/users/${currentUser.id}`, {
+      orders: [...(data.orders || []), orderData],
+    });
+
+    // ✅ Reduce stock for each product
+    await updateProductStock(cartItems);
+
+    toast.success("Order Placed successfully! (Simulated Payment)");
+    navigate("/orders");
+    onClose();
+  } catch (error) {
+    console.error("Error saving online order:", error);
+    toast.error("Order saving failed.");
   }
-
-  const options = {
-    key: "rzp_test_edrzdb8Gbx5U5M",
-    amount: Math.round(totalAmount * 100),
-    currency: "INR",
-    name: "ActiveCore",
-    description: "Test Transaction",
-    handler: async function (response) {
-      toast.success("Order Placed successfully!");
-      try {
-        const { data } = await axiosInstance.get(`/users/${currentUser.id}`);
-        const orderData = {
-          orderId: response.razorpay_payment_id,
-          items: cartItems.map((item) => ({
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            type: item.type,
-            price: item.price,
-            gst: (item.price * item.quantity * 0.18).toFixed(2),
-            total: ((item.price * item.quantity) * 1.18).toFixed(2),
-            image:item.images[0]
-          })),
-          totalAmount: totalAmount,
-          date: new Date().toISOString(),
-          status: "Pending",
-          paymentId: response.razorpay_payment_id,
-        };
-
-        await axiosInstance.patch(`/users/${currentUser.id}`, {
-          orders: [...(data.orders || []), orderData],
-        });
-
-        // ✅ Reduce stock for each product
-        await updateProductStock(cartItems);
-
-        navigate("/orders");
-        onClose();
-      } catch (error) {
-        console.error("Error saving order:", error);
-        toast.error("Order saving failed.");
-      }
-    },
-    prefill: {
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      contact: formData.phone,
-    },
-    theme: { color: "#2563EB" },
-  };
-
-  const rzp = new window.Razorpay(options);
-  rzp.open();
 };
 
 

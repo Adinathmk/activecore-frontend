@@ -7,7 +7,7 @@ import {
   removeProductFromWishlist,
   selectIsProductWishlisted,
 } from "@/features/wishlist/wishlistSlice";
-import { useCart } from "@/features/cart/hooks/CartContext";
+import { useCart } from "@/features/cart/hooks/useCart";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { toast } from "react-toastify";
@@ -15,18 +15,23 @@ import { toast } from "react-toastify";
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { handleAddToCart, getCartItem } = useCart();
+  const {
+    handleAddToCart,
+    isProductInCart,
+    getProductCartCount,
+  } = useCart();
   const { currentUser } = useAuth();
 
   const isWishlisted = useSelector(
     selectIsProductWishlisted(product.id)
   );
 
+  // Default variant for quick add
   const defaultVariantId = product?.variant_id || null;
 
-  const isInCartItem = product.is_in_cart;
-  const cartItem = getCartItem(product.id);
-  const itemCount = cartItem?.quantity || 0;
+  // ✅ PRODUCT-LEVEL cart check (ANY variant)
+  const isInCartItem = isProductInCart(product.slug);
+  const itemCount = getProductCartCount(product.slug);
 
   const handleCardClick = () => {
     navigate(`/product/${product.slug}`);
@@ -35,6 +40,7 @@ export default function ProductCard({ product }) {
   const handleWishlistClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
     if (!currentUser) {
       toast.error("Please login to add items to wishlist");
       return;
@@ -50,25 +56,34 @@ export default function ProductCard({ product }) {
     }
   };
 
+  // ✅ ADD ONLY (no remove allowed here)
   const handleCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    handleAddToCart({
-      ...product,
-      variant_id: defaultVariantId,
-    });
+
+    if (!defaultVariantId) {
+      toast.error("No variant available.");
+      return;
+    }
+
+    if (isInCartItem) {
+      toast.info("Item already in cart");
+      return;
+    }
+
+    handleAddToCart(defaultVariantId, 1);
   };
 
   const getButtonText = () => {
     if (!isInCartItem) return "Add to Cart";
-    return itemCount === 1 ? "Added to Cart" : `${itemCount} in Cart`;
+    return itemCount === 1
+      ? "1 in Cart"
+      : `${itemCount} in Cart`;
   };
 
   const getButtonIcon = () => {
     if (!isInCartItem) return <ShoppingBag className="w-4 h-4" />;
-    return itemCount === 1
-      ? <Check className="w-4 h-4" />
-      : <ShoppingBag className="w-4 h-4" />;
+    return <Check className="w-4 h-4" />;
   };
 
   return (
@@ -120,7 +135,7 @@ export default function ProductCard({ product }) {
               onClick={handleCartClick}
               className={`w-full backdrop-blur-sm py-4 flex items-center justify-center gap-2 transition-colors ${
                 isInCartItem
-                  ? "bg-green-600 text-white hover:bg-green-700"
+                  ? "bg-green-600 text-white cursor-default"
                   : "bg-black/90 text-white hover:bg-black"
               }`}
             >
