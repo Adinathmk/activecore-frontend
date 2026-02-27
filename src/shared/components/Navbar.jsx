@@ -1,14 +1,14 @@
 import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, User as UserIcon, LogIn } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useCart } from '@/features/cart/hooks/CartContext';
+import { useCart } from '@/features/cart/hooks/useCart';
 import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import SearchProductModal from './SearchProductModal';
 
 export default function Navbar() {
-  const { getCartCount } = useCart();
+  const { cart } = useCart();
   const { wishlistCount } = useWishlist();
   const { currentUser, logoutUser } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -135,7 +135,7 @@ export default function Navbar() {
             {/* Cart */}
             <button onClick={() => navigate('/cart')} className="cursor-pointer text-gray-600 hover:text-purple-600 transition-all duration-300 p-2 hover:bg-purple-50 rounded-lg relative group">
               <ShoppingCart size={22} className="group-hover:scale-110 transition-transform" />
-              <span className="absolute -top-1 -right-1 bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg shadow-purple-500/40 ring-2 ring-white">{getCartCount()}</span>
+              <span className="absolute -top-1 -right-1 bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg shadow-purple-500/40 ring-2 ring-white">{cart.reduce((total, item) => total + item.quantity, 0)}</span>
             </button>
 
             {/* Profile/Login */}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useWishlist } from "@/features/wishlist/hooks/useWishlist";
-import { useCart } from "@/features/cart/hooks/CartContext";
+import { useCart } from "@/features/cart/hooks/useCart";
 import {
   Heart,
   Trash2,
@@ -16,13 +16,17 @@ import { Link, useNavigate } from "react-router-dom";
 
 /* ─── Tiny inline styles for things Tailwind can't do ─── */
 const premiumStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&display=swap');
 
-  .wl-title { font-family: 'Cormorant Garamond', Georgia, serif; }
+  .wl-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.02em;
+  }
 
   .wl-card-grid {
     transition: box-shadow 0.3s ease, transform 0.3s ease;
   }
+
   .wl-card-grid:hover {
     box-shadow: 0 20px 60px -10px rgba(0,0,0,0.14);
     transform: translateY(-4px);
@@ -32,21 +36,35 @@ const premiumStyles = `
     transform: translateY(100%);
     transition: transform 0.25s cubic-bezier(0.33,1,0.68,1);
   }
+
   .wl-card-grid:hover .wl-overlay-btn {
     transform: translateY(0%);
   }
 
-  .wl-img { transition: transform 0.6s cubic-bezier(0.33,1,0.68,1); }
-  .wl-card-grid:hover .wl-img { transform: scale(1.06); }
+  .wl-img {
+    transition: transform 0.6s cubic-bezier(0.33,1,0.68,1);
+  }
+
+  .wl-card-grid:hover .wl-img {
+    transform: scale(1.06);
+  }
 
   .wl-remove-pill {
     opacity: 0;
     transition: opacity 0.2s ease;
   }
-  .wl-card-grid:hover .wl-remove-pill { opacity: 1; }
 
-  .wl-row:hover .wl-row-thumb { transform: scale(1.04); }
-  .wl-row-thumb { transition: transform 0.4s ease; }
+  .wl-card-grid:hover .wl-remove-pill {
+    opacity: 1;
+  }
+
+  .wl-row-thumb {
+    transition: transform 0.4s ease;
+  }
+
+  .wl-row:hover .wl-row-thumb {
+    transform: scale(1.04);
+  }
 `;
 
 export default function WishlistPage() {
@@ -60,11 +78,14 @@ export default function WishlistPage() {
   };
 
   const handleMoveAllToCart = async () => {
-    const itemsNotInCart = wishlist.filter((item) => !isInCart(item.product?.id));
-    for (const item of itemsNotInCart) {
-      await handleAddToCart({ ...item.product, variant_id: item.variant_id });
+  for (const item of wishlist) {
+    if (!isInCart(item.variant_id)) {
+      await handleAddToCart(item.variant_id, 1);
     }
-  };
+  }
+
+  await clearWishlist();
+};
 
   if (loading) {
     return (
@@ -175,7 +196,7 @@ export default function WishlistPage() {
                   item={item}
                   onRemove={handleRemoveFromWishlist}
                   onAddToCart={handleAddToCart}
-                  isInCart={isInCart(item.product?.id)}
+                  isInCart={isInCart(item.variant_id)}
                 />
               ))}
             </div>
@@ -188,7 +209,7 @@ export default function WishlistPage() {
                   item={item}
                   onRemove={handleRemoveFromWishlist}
                   onAddToCart={handleAddToCart}
-                  isInCart={isInCart(item.product?.id)}
+                  isInCart={isInCart(item.variant_id)}
                 />
               ))}
             </div>
@@ -214,13 +235,12 @@ function GridCard({ item, onRemove, onAddToCart, isInCart }) {
     navigate(`/product/${product.slug}`);
   };
 
-  const handleCartClick = (e) => {
+  const handleCartClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onAddToCart({
-      ...product,
-      variant_id: variantId,
-    });
+
+    await onAddToCart(variantId, 1);
+    await onRemove(variantId);
   };
 
   return (
@@ -379,7 +399,7 @@ function ListRow({ item, onRemove, onAddToCart, isInCart }) {
       {/* Actions */}
       <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <button
-          onClick={() => onAddToCart({ ...product, variant_id: variantId })}
+          onClick={() =>onAddToCart(variantId, 1)}
           className={`flex items-center gap-1.5 text-[11px] font-medium tracking-widest uppercase px-4 py-2 transition-all duration-200 ${
             isInCart
               ? "bg-gray-50 text-green-700 border border-gray-200"

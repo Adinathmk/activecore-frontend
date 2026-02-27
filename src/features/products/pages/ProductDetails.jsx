@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
-import { useCart } from '@/features/cart/hooks/CartContext';
+import { useCart } from '@/features/cart/hooks/useCart';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import CheckoutModal from '@/shared/components/BuyingModal';
@@ -153,8 +153,8 @@ const ProductDetails = () => {
   const currentVariantId = resolveVariantId();
   const isWishlisted = isVariantInWishlist(currentVariantId);
 
-  const cartItem     = getCartItem(product.id);
-  const isInCartItem = isInCart(product.id);
+  const cartItem     = currentVariantId ? getCartItem(currentVariantId) : null;
+  const isInCartItem = currentVariantId ? isInCart(currentVariantId) : false;
   const itemCount    = cartItem?.quantity || 0;
   const hasMultiple  = images.length > 1;
 
@@ -186,8 +186,17 @@ const ProductDetails = () => {
 
 
   const handleAddToCartClick = () => {
-    if (isInCartItem) { removeFromCart(product.id); return; }
-    handleAddToCart(product);
+    if (!currentVariantId) {
+      toast.info('Please select a size');
+      return;
+    }
+
+    if (isInCartItem) {
+      removeFromCart(currentVariantId);
+      return;
+    }
+
+    handleAddToCart(currentVariantId, quantity);
   };
 
   const handleBuyNowClick = () => {
@@ -200,7 +209,9 @@ const ProductDetails = () => {
 
   const cartButtonText = !isInCartItem
     ? 'Add to Cart'
-    : itemCount > 1 ? `${itemCount} in Cart` : 'Added to Cart';
+    : itemCount > 1
+      ? `${itemCount} in Cart`
+      : '1 in Cart';
 
   const cartButtonIcon = !isInCartItem
     ? <ShoppingBag className="w-5 h-5" />
@@ -501,14 +512,22 @@ const displayDiscount =
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={handleAddToCartClick}
-                    className={`flex-1 flex items-center justify-center gap-2.5 py-4 px-6 rounded-xl border font-light text-base transition-all ${
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-6 rounded-xl border font-light transition-all ${
                       isInCartItem
-                        ? 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                        ? 'bg-green-600 text-white border-green-600 hover:bg-red-600 hover:border-red-600'
                         : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
                     }`}
                   >
-                    {cartButtonIcon}
-                    {cartButtonText}
+                    <div className="flex items-center gap-2.5 text-base">
+                      {cartButtonIcon}
+                      {cartButtonText}
+                    </div>
+
+                    {isInCartItem && (
+                      <span className="text-xs opacity-90 tracking-wide">
+                        Click to remove
+                      </span>
+                    )}
                   </button>
 
                   <button
