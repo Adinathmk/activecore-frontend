@@ -9,32 +9,38 @@ import sampleimage1 from '@/assets/testimonial-1.jpeg';
 import { motion } from 'framer-motion';
 import TestimonialSlider from '@/shared/components/TestimonialSlider';
 import BannerSlider from '@/shared/components/BannerSlider';
+import { getFeaturedProducts } from '@/features/products/api/product.api';
 
 
 function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate=useNavigate();
-  const featuredProducts = [
-    {
-      id: 2,
-      image1: "https://cdn.shopify.com/s/files/1/0156/6146/files/GeoSeamlessT-ShirtBlackCharcoalGreyA5A2D-BBF9-1838_A-Edit_42ac3599-544f-4ffe-ba22-06a37987225b_1920x.jpg?v=1754992733",
-      image2: "https://cdn.shopify.com/s/files/1/0156/6146/files/GeoSeamlessT-ShirtBlack-CharcoalGreyA5A2D-BBF9-0032-Edit_e785c9ac-7b01-4509-aeb8-66341a6764e1_1920x.jpg?v=1754992733",
-    },
-    {
-      id: 31,
-      image1: "https://cdn.shopify.com/s/files/1/0156/6146/files/EVERYDAYSEAMLESSLONGSLEEVECROPTOPBlackB7A2S-BB2J-2677_1920x.jpg?v=1714127923",
-      image2: "https://cdn.shopify.com/s/files/1/0156/6146/files/EVERYDAYSEAMLESSLONGSLEEVECROPTOPBlackB7A2S-BB2J-2706_1920x.jpg?v=1714127921",
-    },
-    {
-      id: 16,
-      image1: "https://cdn.shopify.com/s/files/1/0156/6146/products/A1A2T-UBCYArrivalSlimTankNavy.D1_ZH_ZH_87c78d47-7c22-4cd7-a24e-694e1e0f55b3_1920x.jpg?v=1652263236",
-      image2: "https://cdn.shopify.com/s/files/1/0156/6146/products/A1A2T-UBCYArrivalSlimTankNavy.C_ZH_ZH_c9d296cb-6449-4007-8ce6-84cf6bb1cf19_1920x.jpg?v=1652263236",
-    },{
-      id: 34,
-      image1: "https://cdn.shopify.com/s/files/1/0156/6146/files/EverydaySeamlessLongSleeveCropTopGSNavyB7A2S-UB9P-0876_1920x.jpg?v=1690799792",
-      image2: "https://cdn.shopify.com/s/files/1/0156/6146/files/EverydaySeamlessLongSleeveCropTopGSNavyB7A2S-UB9P-0897_1920x.jpg?v=1690799792",
-    }
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const data = await getFeaturedProducts();
+
+        // ✅ Reverse order here
+        const reversed = [...data].reverse();
+
+        const formatted = reversed.map(product => ({
+          id: product.id,
+          slug: product.slug,
+          image1: product.primary_image || 'https://placehold.co/600x800?text=No+Image',
+          image2: product.secondary_image || null,
+          rating: product.avg_rating
+        }));
+
+        setFeaturedProducts(formatted);
+      } catch (error) {
+        console.error('Failed to fetch featured products:', error);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   const testimonials = [
     {
@@ -193,7 +199,7 @@ function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {featuredProducts.map((product) => (
-              <div key={product.id} onClick={()=>{navigate(`/product/${product.id}`)}} className="group cursor-pointer" >
+              <div key={product.id} onClick={()=>{navigate(`/product/${product.slug}`)}} className="group cursor-pointer" >
                 <div className="relative overflow-hidden bg-gray-100 mb-4 shadow-xl ">
                   <img
                     src={product.image1}                    

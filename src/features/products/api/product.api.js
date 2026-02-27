@@ -11,3 +11,8 @@ export const getProductById = async (id) => {
   const { data } = await axiosInstance.get(PRODUCT_ENDPOINTS.DETAIL(id));
   return data;
 };
+
+export const getFeaturedProducts = async () => {
+  const { data } = await axiosInstance.get(PRODUCT_ENDPOINTS.FEATURED);
+  return data.results || data;
+};
