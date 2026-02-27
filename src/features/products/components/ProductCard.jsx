@@ -39,9 +39,11 @@ export default function ProductCard({ product }) {
 
     if (isWishlisted) {
       dispatch(removeProductFromWishlist(product.id));
+      toast.info("Product removed from wishlist!");
     } else {
       if (!defaultVariantId) return;
       dispatch(addToWishlist(defaultVariantId));
+      toast.success("Product added to wishlist!");
     }
   };
 
@@ -73,9 +75,10 @@ export default function ProductCard({ product }) {
     >
       <button
         onClick={handleWishlistClick}
+        disabled={!product.in_stock}   // ✅ disable if out of stock
         className={`absolute top-4 right-4 z-10 group-hover:opacity-100 transition-opacity duration-300 ${
           isWishlisted ? "opacity-100" : "opacity-0"
-        }`}
+        } ${!product.in_stock ? "cursor-not-allowed opacity-50" : ""}`}  // optional visual feedback
       >
         <Heart
           className={`w-5 h-5 transition ${

@@ -257,7 +257,12 @@ const displayDiscount =
               {/* Wishlist button */}
               <button
                 onClick={handleWishlistClick}
-                className="absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow transition-all hover:scale-110"
+                disabled={!selectedVariant || selectedVariant.available_stock === 0}
+                className={`absolute top-4 right-4 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow transition-all hover:scale-110 ${
+                  !selectedVariant || selectedVariant.available_stock === 0
+                    ? 'opacity-50 cursor-not-allowed hover:scale-100'
+                    : ''
+                }`}
                 title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <Heart
@@ -513,10 +518,15 @@ const displayDiscount =
               {/* Wishlist CTA below buttons — secondary action */}
               <button
                 onClick={handleWishlistClick}
+                disabled={!selectedVariant || selectedVariant.available_stock === 0}
                 className={`w-full flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl border font-light text-sm transition-all ${
                   isWishlisted
                     ? 'border-red-200 bg-red-50 text-red-500 hover:bg-red-100'
                     : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
+                } ${
+                  !selectedVariant || selectedVariant.available_stock === 0
+                    ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
+                    : ''
                 }`}
               >
                 <Heart
