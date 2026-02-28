@@ -1,16 +1,23 @@
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { 
-  loginUser as loginThunk, 
-  registerUser as registerThunk, 
-  logoutUser as logoutThunk,
-  updateProfile as updateProfileThunk 
-} from "../authSlice";
 import getErrorMessage from "@/shared/utils/getErrorMessage";
+import {
+  sendOtpRequest,
+  verifyOtpRequest,
+  forgotPasswordRequest,
+  resetPasswordRequest
+} from "@/features/auth/api/auth.api";
+import {
+  loginUser as loginUserAction,
+  registerUser as registerUserAction,
+  logoutUser as logoutUserAction,
+  updateProfile as updateProfileThunk
+} from "../authSlice";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
+  const { user, accessToken, isAuthenticated, loadingLogin, loadingRegister, loadingUser, error } = auth;
 
   const updateProfile = async (data) => {
     try {
@@ -25,7 +32,7 @@ export const useAuth = () => {
 
   const loginUser = async (data) => {
     try {
-      const result = await dispatch(loginThunk(data)).unwrap();
+      const result = await dispatch(loginUserAction(data)).unwrap();
       toast.success("Login successful 🎉");
       return result;
     } catch (err) {
@@ -36,7 +43,7 @@ export const useAuth = () => {
 
   const registerUser = async (data) => {
     try {
-      const result = await dispatch(registerThunk(data)).unwrap();
+      const result = await dispatch(registerUserAction(data)).unwrap();
       toast.success("Account created successfully 🎉");
       return result;
     } catch (err) {
@@ -47,24 +54,77 @@ export const useAuth = () => {
 
   const logoutUser = async () => {
     try {
-      await dispatch(logoutThunk()).unwrap();
+      await dispatch(logoutUserAction()).unwrap();
       toast.success("Logged out successfully");
     } catch (err) {
-      toast.error(err || "Logout failed");
+      toast.error(getErrorMessage(err));
+      throw err;
+    }
+  };
+
+  const sendOtp = async (data) => {
+    try {
+      const response = await sendOtpRequest(data);
+      toast.success(response.data?.message || "OTP sent successfully!");
+      return response.data;
+    } catch (err) {
+      toast.error(getErrorMessage(err.response?.data || err));
+      throw err;
+    }
+  };
+
+  const verifyOtp = async (data) => {
+    try {
+      const response = await verifyOtpRequest(data);
+      toast.success(response.data?.message || "Account verified successfully!");
+      return response.data;
+    } catch (err) {
+      toast.error(getErrorMessage(err.response?.data || err));
+      throw err;
+    }
+  };
+
+  const forgotPassword = async (data) => {
+    try {
+      const response = await forgotPasswordRequest(data);
+      toast.success(response.data?.message || "OTP sent to email");
+      return response.data;
+    } catch (err) {
+      toast.error(getErrorMessage(err.response?.data || err));
+      throw err;
+    }
+  };
+
+  const resetPassword = async (data) => {
+    try {
+      const response = await resetPasswordRequest(data);
+      toast.success(response.data?.message || "Password reset successful");
+      return response.data;
+    } catch (err) {
+      toast.error(getErrorMessage(err.response?.data || err));
+      throw err;
     }
   };
 
   return {
-    ...auth,
-    currentUser: auth.user,
+    currentUser: user,
+    accessToken,
+    isAuthenticated,
+    loadingLogin,
+    loadingRegister,
+    loadingUser,
+    error,
     loginUser,
     registerUser,
     logoutUser,
     updateProfile,
+    sendOtp,
+    verifyOtp,
+    forgotPassword,
+    resetPassword,
     // Aliases for convenience
     login: loginUser,
     register: registerUser,
     logout: logoutUser,
-    updateProfile: updateProfile,
   };
 };

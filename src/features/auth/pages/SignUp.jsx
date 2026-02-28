@@ -6,7 +6,8 @@ import { Eye, EyeOff } from "lucide-react";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
-  const { registerUser, loadingRegister } = useAuth();
+  const { registerUser, loadingRegister, sendOtp } = useAuth();
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -88,8 +89,19 @@ const SignUpPage = () => {
     try {
       const { confirm_password, ...payload } = formData;
 
+      // 1. Register the user
       await registerUser(payload);
-      navigate("/login");
+      
+      // 2. Automatically trigger the OTP email send
+      try {
+        setIsSendingOtp(true);
+        await sendOtp({ email: formData.email });
+      } finally {
+        setIsSendingOtp(false);
+      }
+
+      // 3. Send the new user to the Verify OTP page with their email pre-filled
+      navigate("/verify-otp", { state: { email: formData.email } });
     } catch (error) {
       if (typeof error === "object" && error !== null) {
         const backendErrors = {};
@@ -203,10 +215,14 @@ const SignUpPage = () => {
 
               <button
                 type="submit"
-                disabled={loadingRegister}
+                disabled={loadingRegister || isSendingOtp}
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
               >
-                {loadingRegister ? "Creating Account..." : "Sign Up"}
+                {loadingRegister 
+                  ? "Creating Account..." 
+                  : isSendingOtp 
+                    ? "Sending OTP..." 
+                    : "Sign Up"}
               </button>
             </form>
 

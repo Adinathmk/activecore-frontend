@@ -24,3 +24,19 @@ export const authMeRequest = () => {
 export const updateProfileRequest = (data) => {
   return axios.patch(AUTH_ENDPOINTS.AUTH_ME, data);
 };
+
+export const sendOtpRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.SEND_OTP, data);
+};
+
+export const verifyOtpRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.VERIFY_OTP, data);
+};
+
+export const forgotPasswordRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, data);
+};
+
+export const resetPasswordRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.RESET_PASSWORD, data);
+};

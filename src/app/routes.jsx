@@ -12,6 +12,10 @@ import Login from '@/features/auth/pages/Login';
 import SignUp from '@/features/auth/pages/SignUp';
 import UserProfile from '@/features/auth/pages/Profile';
 
+import VerifyOtp from '@/features/auth/pages/VerifyOtp';
+import ForgotPassword from '@/features/auth/pages/ForgotPassword';
+import ResetPassword from '@/features/auth/pages/ResetPassword';
+
 // Products Pages
 import Products from '@/features/products/pages/Products';
 import ProductDetails from '@/features/products/pages/ProductDetails';
@@ -38,6 +42,9 @@ const AppRoutes = () => {
       <Route element={<ProtectLogin />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       <Route element={<MainLayout />}>

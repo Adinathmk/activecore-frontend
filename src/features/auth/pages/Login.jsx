@@ -5,7 +5,8 @@ import banner from "@/assets/image.avif";
 
 const SignInPage = () => {
   const navigate = useNavigate();
-  const { loginUser, loadingLogin } = useAuth();
+  const { loginUser, loadingLogin, sendOtp } = useAuth();
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -54,6 +55,31 @@ const SignInPage = () => {
       navigate("/", { replace: true });
     } catch (error) {
       // Toast error is handled inside useAuth now
+      
+      // Look for indicators that the user isn't verified yet
+      // This is a common pattern: either an explicit code, or message strings.
+      // E.g., Django often returns `{"detail": "..."}` or `{"non_field_errors": ["...unverified..."]}`
+      const errorStr = JSON.stringify(error).toLowerCase();
+      if (
+        errorStr.includes("verified") || 
+        errorStr.includes("verify") || 
+        errorStr.includes("activation") ||
+        errorStr.includes("inactive")
+      ) {
+         // Optionally you can add a toast to explicitly state why they were redirected:
+         // toast.info("Please verify your email to log in.");
+         
+         try {
+           setIsSendingOtp(true);
+           await sendOtp({ email: formData.email });
+         } catch (e) {
+           // Allow redirect even if sending fails (they can resend manually on the next page)
+         } finally {
+           setIsSendingOtp(false);
+         }
+         
+         navigate("/verify-otp", { state: { email: formData.email } });
+      }
     }
   };
 
@@ -117,12 +143,26 @@ const SignInPage = () => {
                 )}
               </div>
 
+              <div className="flex justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+
               <button
                 type="submit"
-                disabled={loadingLogin}
+                disabled={loadingLogin || isSendingOtp}
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
               >
-                {loadingLogin ? "Signing In..." : "Sign In"}
+                {loadingLogin 
+                  ? "Signing In..." 
+                  : isSendingOtp 
+                    ? "Redirecting & Sending OTP..." 
+                    : "Sign In"}
               </button>
             </form>
 
