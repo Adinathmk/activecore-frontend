@@ -20,3 +20,7 @@ export const refreshRequest = () => {
 export const authMeRequest = () => {
   return axios.get(AUTH_ENDPOINTS.AUTH_ME);
 };
+
+export const updateProfileRequest = (data) => {
+  return axios.patch(AUTH_ENDPOINTS.AUTH_ME, data);
+};

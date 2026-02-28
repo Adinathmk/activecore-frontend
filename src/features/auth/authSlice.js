@@ -4,12 +4,25 @@ import {
   registerRequest,
   logoutRequest,
   authMeRequest,
+  updateProfileRequest,
 } from "./api/auth.api";
 import getErrorMessage from "@/shared/utils/getErrorMessage";
 
 // ==============================
 // THUNKS
 // ==============================
+
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await updateProfileRequest(data);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(getErrorMessage(err));
+    }
+  }
+);
 
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
@@ -93,6 +106,11 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      // ================= UPDATE PROFILE =================
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
 
       // ================= LOGIN =================
       .addCase(loginUser.pending, (state) => {

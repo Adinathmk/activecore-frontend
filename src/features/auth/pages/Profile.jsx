@@ -4,66 +4,127 @@ import {
   ShoppingBag, HelpCircle, Package, Clock, CheckCircle, XCircle
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import axiosInstance from '@/services/axiosInstance';
 import { toast } from 'react-toastify';
 
 const UserProfile = () => {
-  const { currentUser } = useAuth();
+
+  const { currentUser, updateProfile } = useAuth();
+  const [previewImage, setPreviewImage] = useState(null);
   const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone_number: "",
     orders: [],
+    address: {
+      full_name: "",
+      phone_number: "",
+      address_line_1: "",
+      address_line_2: "",
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "",
+    }
   });
+
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch user data from JSON Server
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data } = await axiosInstance.get(`/users?id=${currentUser.id}`);
-        if (data && data.length > 0) {
-          setUserData(data[0]);
+    if (currentUser) {
+      setUserData((prev) => ({
+        ...prev,
+        first_name: currentUser.first_name || "",
+        last_name: currentUser.last_name || "",
+        phone_number: currentUser.phone_number || "",
+        email: currentUser.email || "",
+        address: {
+          full_name: currentUser.address?.full_name || "",
+          phone_number: currentUser.address?.phone_number || "",
+          address_line_1: currentUser.address?.address_line_1 || "",
+          address_line_2: currentUser.address?.address_line_2 || "",
+          city: currentUser.address?.city || "",
+          state: currentUser.address?.state || "",
+          postal_code: currentUser.address?.postal_code || "",
+          country: currentUser.address?.country || "",
         }
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        toast.error('Failed to load user data');
-      }
-    };
-    if (currentUser?.id) fetchUser();
-  }, [currentUser?.id]);
+      }));
+    }
+  }, [currentUser]);
 
-  // Handle form input changes
+  const handleAddressChange = (field, value) => {
+    setUserData((prev) => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        [field]: value,
+      },
+    }));
+  };
+
   const handleInputChange = (field, value) => {
     setUserData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
+  const handleImageChange = (e) => {
+      const file = e.target.files[0];
 
-  // Save changes to JSON Server
-  const handleSave = async () => {
-    setIsEditing(false);
-    try {
-      await axiosInstance.patch(`/users/${currentUser.id}`, userData);
-      toast.success('Profile updated successfully!');
-    } catch (err) {
-      console.error('Error updating user:', err);
-      toast.error('Failed to update profile');
-    }
+      if (file) {
+        setUserData((prev) => ({
+          ...prev,
+          profile_image_file: file,
+        }));
+
+        // 🔥 Create preview
+        const previewURL = URL.createObjectURL(file);
+        setPreviewImage(previewURL);
+      }
   };
+const handleSave = async () => {
+  try {
+    const formData = new FormData();
 
-  // Calculate order statistics
+    formData.append("first_name", userData.first_name);
+    formData.append("last_name", userData.last_name);
+    formData.append("phone_number", userData.phone_number);
+    formData.append("address.full_name", userData.address.full_name);
+    formData.append("address.phone_number", userData.address.phone_number);
+    formData.append("address.address_line_1", userData.address.address_line_1);
+    formData.append("address.address_line_2", userData.address.address_line_2);
+    formData.append("address.city", userData.address.city);
+    formData.append("address.state", userData.address.state);
+    formData.append("address.postal_code", userData.address.postal_code);
+    formData.append("address.country", userData.address.country);
+
+    if (userData.profile_image_file) {
+      formData.append("profile_image", userData.profile_image_file);
+    }
+
+    await updateProfile(formData);
+
+    setIsEditing(false);
+
+    // 🔥 Clear preview after successful save
+    setPreviewImage(null);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update profile");
+  }
+};
+
   const getOrderStats = () => {
     const orders = userData.orders || [];
     const totalOrders = orders.length;
-    const pendingOrders = orders.filter(order => 
+    const pendingOrders = orders.filter(order =>
       order.status === 'Processing' || order.status === 'Pending'
     ).length;
-    const deliveredOrders = orders.filter(order => 
+    const deliveredOrders = orders.filter(order =>
       order.status === 'Delivered'
     ).length;
-    const cancelledOrders = orders.filter(order => 
+    const cancelledOrders = orders.filter(order =>
       order.status === 'Cancelled'
     ).length;
     const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
@@ -79,9 +140,10 @@ const UserProfile = () => {
 
   const orderStats = getOrderStats();
 
-  // User initials
   const getUserInitials = () => {
-    const name = currentUser?.name || 'U';
+    const name = `${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim();
+    if (!name) return "U";
+
     return name
       .split(' ')
       .map((n) => n[0])
@@ -93,7 +155,7 @@ const UserProfile = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
           <p className="text-gray-600 mt-2">
@@ -102,10 +164,11 @@ const UserProfile = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+
           <div className="lg:col-span-2 space-y-6">
-            {/* Profile Card */}
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
               <div className="flex justify-between items-start mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
                   Personal Information
@@ -129,36 +192,69 @@ const UserProfile = () => {
               </div>
 
               <div className="space-y-6">
-                {/* Profile Picture */}
+
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-3xl">
-                      {getUserInitials()}
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
+                      {previewImage ? (
+                        // 🔥 Show preview while editing
+                        <img
+                          src={previewImage}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : currentUser?.profile_image ? (
+                        // 🔥 Show backend image when not editing
+                        <img
+                          src={currentUser.profile_image}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        // 🔥 Fallback to initials
+                        <div className="w-full h-full flex items-center justify-center text-white font-semibold text-3xl bg-gradient-to-br from-purple-500 to-blue-500">
+                          {getUserInitials()}
+                        </div>
+                      )}
                     </div>
-                    <button className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-                      <Camera size={16} className="text-gray-600" />
-                    </button>
+                    {isEditing && (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="profileUpload"
+                        onChange={handleImageChange}
+                      />
+
+                      <label
+                        htmlFor="profileUpload"
+                        className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
+                      >
+                        <Camera size={16} className="text-gray-600" />
+                      </label>
+                    </>
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">
-                      {userData.name || 'User'}
+                      {(userData.first_name + " " + userData.last_name).trim() || 'User'}
                     </h3>
                   </div>
                 </div>
 
-                {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name */}
+
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Full Name
+                      First Name
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
-                        value={userData.name || ''}
+                        value={userData.first_name}
                         onChange={(e) =>
-                          handleInputChange('name', e.target.value)
+                          handleInputChange('first_name', e.target.value)
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                       />
@@ -166,13 +262,35 @@ const UserProfile = () => {
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                         <User size={20} className="text-gray-400" />
                         <span className="text-gray-900">
-                          {userData.name || 'Not provided'}
+                          {userData.first_name || 'Not provided'}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Last Name
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={userData.last_name}
+                        onChange={(e) =>
+                          handleInputChange('last_name', e.target.value)
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                        <User size={20} className="text-gray-400" />
+                        <span className="text-gray-900">
+                          {userData.last_name || 'Not provided'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       Email Address
@@ -185,7 +303,6 @@ const UserProfile = () => {
                     </div>
                   </div>
 
-                  {/* Phone */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       Phone Number
@@ -193,9 +310,9 @@ const UserProfile = () => {
                     {isEditing ? (
                       <input
                         type="tel"
-                        value={userData.phone || ''}
+                        value={userData.phone_number}
                         onChange={(e) =>
-                          handleInputChange('phone', e.target.value)
+                          handleInputChange('phone_number', e.target.value)
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                       />
@@ -203,7 +320,7 @@ const UserProfile = () => {
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                         <Phone size={20} className="text-gray-400" />
                         <span className="text-gray-900">
-                          {userData.phone || 'Not provided'}
+                          {userData.phone_number || 'Not provided'}
                         </span>
                       </div>
                     )}
@@ -212,18 +329,212 @@ const UserProfile = () => {
               </div>
             </div>
 
-            
+            {/* Address Card */}
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    Address Information
+  </h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    {/* Full Name */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Full Name
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.full_name}
+          onChange={(e) =>
+            handleAddressChange("full_name", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.full_name || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Phone */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Address Phone
+      </label>
+      {isEditing ? (
+        <input
+          type="tel"
+          value={userData.address.phone_number}
+          onChange={(e) =>
+            handleAddressChange("phone_number", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.phone_number || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Address Line 1 */}
+    <div className="space-y-2 md:col-span-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Address Line 1
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.address_line_1}
+          onChange={(e) =>
+            handleAddressChange("address_line_1", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.address_line_1 || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Address Line 2 */}
+    <div className="space-y-2 md:col-span-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Address Line 2
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.address_line_2}
+          onChange={(e) =>
+            handleAddressChange("address_line_2", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.address_line_2 || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* City */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        City
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.city}
+          onChange={(e) =>
+            handleAddressChange("city", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.city || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* State */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        State
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.state}
+          onChange={(e) =>
+            handleAddressChange("state", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.state || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Postal Code */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Postal Code
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.postal_code}
+          onChange={(e) =>
+            handleAddressChange("postal_code", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.postal_code || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Country */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Country
+      </label>
+      {isEditing ? (
+        <input
+          type="text"
+          value={userData.address.country}
+          onChange={(e) =>
+            handleAddressChange("country", e.target.value)
+          }
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        />
+      ) : (
+        <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
+          <span className="text-gray-900">
+            {userData.address.country || "Not provided"}
+          </span>
+        </div>
+      )}
+    </div>
+
+  </div>
+</div>
+
           </div>
 
-          {/* Right Column */}
           <div className="space-y-6">
-            {/* Account Stats */}
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="font-semibold text-gray-900 mb-4">
                 Account Overview
               </h3>
+
               <div className="space-y-4">
-                {/* Total Orders */}
+
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <ShoppingBag size={18} className="text-gray-600" />
@@ -234,7 +545,6 @@ const UserProfile = () => {
                   </span>
                 </div>
 
-                {/* Pending Orders */}
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <Clock size={18} className="text-yellow-600" />
@@ -245,7 +555,6 @@ const UserProfile = () => {
                   </span>
                 </div>
 
-                {/* Delivered Orders */}
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <CheckCircle size={18} className="text-green-600" />
@@ -256,7 +565,6 @@ const UserProfile = () => {
                   </span>
                 </div>
 
-                {/* Cancelled Orders */}
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <XCircle size={18} className="text-red-600" />
@@ -267,7 +575,6 @@ const UserProfile = () => {
                   </span>
                 </div>
 
-                {/* Total Spent */}
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <Package size={18} className="text-blue-600" />
@@ -277,10 +584,10 @@ const UserProfile = () => {
                     ₹{orderStats.totalSpent.toLocaleString()}
                   </span>
                 </div>
+
               </div>
             </div>
 
-            {/* Support Card */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <HelpCircle size={20} className="text-blue-600" />
@@ -293,6 +600,7 @@ const UserProfile = () => {
                 Contact Support
               </button>
             </div>
+
           </div>
         </div>
       </div>

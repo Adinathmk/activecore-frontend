@@ -3,12 +3,24 @@ import { toast } from "react-toastify";
 import { 
   loginUser as loginThunk, 
   registerUser as registerThunk, 
-  logoutUser as logoutThunk 
+  logoutUser as logoutThunk,
+  updateProfile as updateProfileThunk 
 } from "../authSlice";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
+
+  const updateProfile = async (data) => {
+    try {
+      const result = await dispatch(updateProfileThunk(data)).unwrap();
+      toast.success("Profile updated successfully 🎉");
+      return result;
+    } catch (err) {
+      toast.error(err || "Profile update failed");
+      throw err;
+    }
+  };
 
   const loginUser = async (data) => {
     try {
@@ -47,9 +59,11 @@ export const useAuth = () => {
     loginUser,
     registerUser,
     logoutUser,
+    updateProfile,
     // Aliases for convenience
     login: loginUser,
     register: registerUser,
     logout: logoutUser,
+    updateProfile: updateProfile,
   };
 };
