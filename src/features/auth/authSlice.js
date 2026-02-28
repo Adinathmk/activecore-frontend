@@ -19,6 +19,7 @@ export const updateProfile = createAsyncThunk(
       const res = await updateProfileRequest(data);
       return res.data;
     } catch (err) {
+      if (err.response?.data) return rejectWithValue(err.response.data);
       return rejectWithValue(getErrorMessage(err));
     }
   }
@@ -31,6 +32,7 @@ export const loginUser = createAsyncThunk(
       const res = await loginRequest(credentials);
       return res.data;
     } catch (err) {
+      if (err.response?.data) return rejectWithValue(err.response.data);
       return rejectWithValue(getErrorMessage(err));
     }
   }
@@ -43,6 +45,7 @@ export const registerUser = createAsyncThunk(
       const res = await registerRequest(data);
       return res.data;
     } catch (err) {
+      if (err.response?.data) return rejectWithValue(err.response.data);
       return rejectWithValue(getErrorMessage(err));
     }
   }

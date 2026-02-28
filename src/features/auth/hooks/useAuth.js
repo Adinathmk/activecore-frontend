@@ -6,6 +6,7 @@ import {
   logoutUser as logoutThunk,
   updateProfile as updateProfileThunk 
 } from "../authSlice";
+import getErrorMessage from "@/shared/utils/getErrorMessage";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -17,7 +18,7 @@ export const useAuth = () => {
       toast.success("Profile updated successfully 🎉");
       return result;
     } catch (err) {
-      toast.error(err || "Profile update failed");
+      toast.error(getErrorMessage(err) || "Profile update failed");
       throw err;
     }
   };
@@ -28,7 +29,7 @@ export const useAuth = () => {
       toast.success("Login successful 🎉");
       return result;
     } catch (err) {
-      toast.error(err || "Login failed");
+      toast.error(getErrorMessage(err) || "Login failed");
       throw err;
     }
   };
@@ -39,7 +40,7 @@ export const useAuth = () => {
       toast.success("Account created successfully 🎉");
       return result;
     } catch (err) {
-      toast.error(err || "Registration failed");
+      toast.error(getErrorMessage(err) || "Registration failed");
       throw err;
     }
   };

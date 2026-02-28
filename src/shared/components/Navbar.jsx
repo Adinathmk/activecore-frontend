@@ -66,14 +66,15 @@ export default function Navbar() {
   // User display functions
   const getUserDisplayName = () => {
     if (!currentUser) return 'User';
-    if (currentUser.name) return currentUser.name;
-    if (currentUser.firstName && currentUser.lastName) return `${currentUser.firstName} ${currentUser.lastName}`;
+    const name = `${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim();
+    if (name) return name;
     if (currentUser.email) return currentUser.email.split('@')[0];
     return 'User';
   };
 
   const getUserInitials = () => {
     const name = getUserDisplayName();
+    if (name === 'User') return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
@@ -150,7 +151,15 @@ export default function Navbar() {
                   {isProfileModalOpen && (
                     <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-3 z-50 animate-in slide-in-from-top-2 duration-200">
                       <div className="px-4 py-3 border-b border-gray-100 flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">{getUserInitials()}</div>
+                        {currentUser?.profile_image ? (
+                          <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-100">
+                            <img src={currentUser.profile_image} alt="Profile" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {getUserInitials()}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">Hello, {getUserDisplayName()}!</p>
                           <p className="text-xs text-gray-500 truncate mt-1">Welcome to Active Core</p>
@@ -238,7 +247,15 @@ export default function Navbar() {
               {currentUser ? (
                 <>
                   <div className="px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 mb-3 flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">{getUserInitials()}</div>
+                    {currentUser?.profile_image ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                        <img src={currentUser.profile_image} alt="Profile" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        {getUserInitials()}
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Hello, {getUserDisplayName()}!</p>
                       <p className="text-xs text-gray-500 mt-1">Welcome to Active Core</p>

@@ -29,6 +29,8 @@ const UserProfile = () => {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (currentUser) {
@@ -60,6 +62,7 @@ const UserProfile = () => {
         [field]: value,
       },
     }));
+    setErrors((prev) => ({ ...prev, [`address.${field}`]: "" }));
   };
 
   const handleInputChange = (field, value) => {
@@ -67,6 +70,7 @@ const UserProfile = () => {
       ...prev,
       [field]: value,
     }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
   const handleImageChange = (e) => {
       const file = e.target.files[0];
@@ -82,38 +86,89 @@ const UserProfile = () => {
         setPreviewImage(previewURL);
       }
   };
-const handleSave = async () => {
-  try {
-    const formData = new FormData();
 
-    formData.append("first_name", userData.first_name);
-    formData.append("last_name", userData.last_name);
-    formData.append("phone_number", userData.phone_number);
-    formData.append("address.full_name", userData.address.full_name);
-    formData.append("address.phone_number", userData.address.phone_number);
-    formData.append("address.address_line_1", userData.address.address_line_1);
-    formData.append("address.address_line_2", userData.address.address_line_2);
-    formData.append("address.city", userData.address.city);
-    formData.append("address.state", userData.address.state);
-    formData.append("address.postal_code", userData.address.postal_code);
-    formData.append("address.country", userData.address.country);
+  const validate = () => {
+    const newErrors = {};
 
-    if (userData.profile_image_file) {
-      formData.append("profile_image", userData.profile_image_file);
+    if (!userData.first_name.trim()) newErrors.first_name = "First name is required";
+    if (!userData.last_name.trim()) newErrors.last_name = "Last name is required";
+
+    if (userData.phone_number) {
+        const cleanedPhone = userData.phone_number.replace(/[\s-]/g, "");
+        const phoneRegex = /^\+?\d{10,15}$/;
+        if (!phoneRegex.test(cleanedPhone)) {
+            newErrors.phone_number = "Enter valid phone number";
+        }
     }
 
-    await updateProfile(formData);
+    if (userData.address?.phone_number) {
+        const cleanedPhone = userData.address.phone_number.replace(/[\s-]/g, "");
+        const phoneRegex = /^\+?\d{10,15}$/;
+        if (!phoneRegex.test(cleanedPhone)) {
+            newErrors["address.phone_number"] = "Enter valid phone number";
+        }
+    }
 
-    setIsEditing(false);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    // 🔥 Clear preview after successful save
-    setPreviewImage(null);
+  const handleSave = async () => {
+    if (!validate()) {
+      toast.error("Please fix the validation errors");
+      return;
+    }
 
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to update profile");
-  }
-};
+    try {
+      const formData = new FormData();
+
+      formData.append("first_name", userData.first_name);
+      formData.append("last_name", userData.last_name);
+      formData.append("phone_number", userData.phone_number);
+      formData.append("address.full_name", userData.address.full_name);
+      formData.append("address.phone_number", userData.address.phone_number);
+      formData.append("address.address_line_1", userData.address.address_line_1);
+      formData.append("address.address_line_2", userData.address.address_line_2);
+      formData.append("address.city", userData.address.city);
+      formData.append("address.state", userData.address.state);
+      formData.append("address.postal_code", userData.address.postal_code);
+      formData.append("address.country", userData.address.country);
+
+      if (userData.profile_image_file) {
+        formData.append("profile_image", userData.profile_image_file);
+      }
+
+      setIsUpdating(true);
+      await updateProfile(formData);
+
+      setIsEditing(false);
+
+      // 🔥 Clear preview after successful save
+      setPreviewImage(null);
+      setErrors({});
+
+    } catch (err) {
+      console.error(err);
+      if (typeof err === "object" && err !== null) {
+        const backendErrors = {};
+        
+        Object.entries(err).forEach(([key, value]) => {
+          // Check if the value is an object (like the "address" field errors)
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+              backendErrors[`address.${nestedKey}`] = Array.isArray(nestedValue) ? nestedValue[0] : nestedValue;
+            });
+          } else {
+            backendErrors[key] = Array.isArray(value) ? value[0] : value;
+          }
+        });
+        
+        setErrors(backendErrors);
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const getOrderStats = () => {
     const orders = userData.orders || [];
@@ -175,13 +230,21 @@ const handleSave = async () => {
                 </h2>
                 <button
                   onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                  disabled={isUpdating}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isEditing ? (
-                    <>
-                      <Check size={16} />
-                      Save Changes
-                    </>
+                    isUpdating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent flex-shrink-0 rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={16} />
+                        Save Changes
+                      </>
+                    )
                   ) : (
                     <>
                       <Edit size={16} />
@@ -250,14 +313,19 @@ const handleSave = async () => {
                       First Name
                     </label>
                     {isEditing ? (
-                      <input
-                        type="text"
-                        value={userData.first_name}
-                        onChange={(e) =>
-                          handleInputChange('first_name', e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                      <div>
+                        <input
+                          type="text"
+                          value={userData.first_name}
+                          onChange={(e) =>
+                            handleInputChange('first_name', e.target.value)
+                          }
+                          className={`w-full px-4 py-3 bg-white border ${
+                            errors.first_name ? "border-red-500" : "border-gray-300"
+                          } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                        />
+                        {errors.first_name && <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>}
+                      </div>
                     ) : (
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                         <User size={20} className="text-gray-400" />
@@ -273,14 +341,19 @@ const handleSave = async () => {
                       Last Name
                     </label>
                     {isEditing ? (
-                      <input
-                        type="text"
-                        value={userData.last_name}
-                        onChange={(e) =>
-                          handleInputChange('last_name', e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                      <div>
+                        <input
+                          type="text"
+                          value={userData.last_name}
+                          onChange={(e) =>
+                            handleInputChange('last_name', e.target.value)
+                          }
+                          className={`w-full px-4 py-3 bg-white border ${
+                            errors.last_name ? "border-red-500" : "border-gray-300"
+                          } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                        />
+                        {errors.last_name && <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>}
+                      </div>
                     ) : (
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                         <User size={20} className="text-gray-400" />
@@ -308,14 +381,19 @@ const handleSave = async () => {
                       Phone Number
                     </label>
                     {isEditing ? (
-                      <input
-                        type="tel"
-                        value={userData.phone_number}
-                        onChange={(e) =>
-                          handleInputChange('phone_number', e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      />
+                      <div>
+                        <input
+                          type="tel"
+                          value={userData.phone_number}
+                          onChange={(e) =>
+                            handleInputChange('phone_number', e.target.value)
+                          }
+                          className={`w-full px-4 py-3 bg-white border ${
+                            errors.phone_number ? "border-red-500" : "border-gray-300"
+                          } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                        />
+                        {errors.phone_number && <p className="text-red-500 text-sm mt-1">{errors.phone_number}</p>}
+                      </div>
                     ) : (
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                         <Phone size={20} className="text-gray-400" />
@@ -343,14 +421,19 @@ const handleSave = async () => {
         Full Name
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.full_name}
-          onChange={(e) =>
-            handleAddressChange("full_name", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.full_name}
+            onChange={(e) =>
+              handleAddressChange("full_name", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.full_name"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.full_name"] && <p className="text-red-500 text-sm mt-1">{errors["address.full_name"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -366,14 +449,19 @@ const handleSave = async () => {
         Address Phone
       </label>
       {isEditing ? (
-        <input
-          type="tel"
-          value={userData.address.phone_number}
-          onChange={(e) =>
-            handleAddressChange("phone_number", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="tel"
+            value={userData.address.phone_number}
+            onChange={(e) =>
+              handleAddressChange("phone_number", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.phone_number"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.phone_number"] && <p className="text-red-500 text-sm mt-1">{errors["address.phone_number"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -389,14 +477,19 @@ const handleSave = async () => {
         Address Line 1
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.address_line_1}
-          onChange={(e) =>
-            handleAddressChange("address_line_1", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.address_line_1}
+            onChange={(e) =>
+              handleAddressChange("address_line_1", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.address_line_1"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.address_line_1"] && <p className="text-red-500 text-sm mt-1">{errors["address.address_line_1"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -412,14 +505,19 @@ const handleSave = async () => {
         Address Line 2
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.address_line_2}
-          onChange={(e) =>
-            handleAddressChange("address_line_2", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.address_line_2}
+            onChange={(e) =>
+              handleAddressChange("address_line_2", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.address_line_2"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.address_line_2"] && <p className="text-red-500 text-sm mt-1">{errors["address.address_line_2"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -435,14 +533,19 @@ const handleSave = async () => {
         City
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.city}
-          onChange={(e) =>
-            handleAddressChange("city", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.city}
+            onChange={(e) =>
+              handleAddressChange("city", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.city"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.city"] && <p className="text-red-500 text-sm mt-1">{errors["address.city"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -458,14 +561,19 @@ const handleSave = async () => {
         State
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.state}
-          onChange={(e) =>
-            handleAddressChange("state", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.state}
+            onChange={(e) =>
+              handleAddressChange("state", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.state"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.state"] && <p className="text-red-500 text-sm mt-1">{errors["address.state"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -481,14 +589,19 @@ const handleSave = async () => {
         Postal Code
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.postal_code}
-          onChange={(e) =>
-            handleAddressChange("postal_code", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.postal_code}
+            onChange={(e) =>
+              handleAddressChange("postal_code", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.postal_code"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.postal_code"] && <p className="text-red-500 text-sm mt-1">{errors["address.postal_code"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
@@ -504,14 +617,19 @@ const handleSave = async () => {
         Country
       </label>
       {isEditing ? (
-        <input
-          type="text"
-          value={userData.address.country}
-          onChange={(e) =>
-            handleAddressChange("country", e.target.value)
-          }
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-        />
+        <div>
+          <input
+            type="text"
+            value={userData.address.country}
+            onChange={(e) =>
+              handleAddressChange("country", e.target.value)
+            }
+            className={`w-full px-4 py-3 bg-white border ${
+              errors["address.country"] ? "border-red-500" : "border-gray-300"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          />
+          {errors["address.country"] && <p className="text-red-500 text-sm mt-1">{errors["address.country"]}</p>}
+        </div>
       ) : (
         <div className="flex items-center p-3 rounded-xl bg-gray-50 min-h-[48px]">
           <span className="text-gray-900">
