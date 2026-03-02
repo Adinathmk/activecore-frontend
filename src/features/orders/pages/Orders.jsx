@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ShoppingBag, X, Package, Calendar, CreditCard, MapPin } from 'lucide-react';
 import axiosInstance from '@/services/axiosInstance';
+import { getOrdersAPI } from '../api/order.api';
 
 function Orders() {
     const [isViewAll, setViewAll] = useState(false);
@@ -38,18 +39,16 @@ function Orders() {
     };
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchUserOrders = async () => {
             try {
-                const { data } = await axiosInstance.get(`/users?id=${currentUser.id}`);
-                if (data && data.length > 0) {
-                    setOrders(data[0].orders);
-                }
+                const data = await getOrdersAPI();
+                setOrders(data);
             } catch (err) {
-                console.error('Error fetching user:', err);
-                toast.error('Failed to load user data');
+                console.error('Error fetching orders:', err);
+                toast.error('Failed to load orders data');
             }
         };
-        if (currentUser?.id) fetchUser();
+        if (currentUser?.id) fetchUserOrders();
     }, [currentUser?.id]);
 
     return (
@@ -65,9 +64,9 @@ function Orders() {
                 {isViewAll && <>
                     <div className="space-y-4">
                         {orders?.length > 0 ? (
-                            [...orders].reverse().map((order) => (
+                            [...orders].sort((a, b) => new Date(b.placed_at) - new Date(a.placed_at)).map((order) => (
                                 <div
-                                    key={order.orderId}
+                                    key={order.id}
                                     onClick={() => handleOrderClick(order)}
                                     className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
                                 >
@@ -77,16 +76,16 @@ function Orders() {
                                         </div>
                                         <div>
                                             <h3 className="font-medium text-gray-900">
-                                                {order.orderId}
+                                                {order.id}
                                             </h3>
                                             <p className="text-sm text-gray-600">
-                                                Placed on {new Date(order.date).toISOString().split("T")[0]}
+                                                Placed on {new Date(order.placed_at).toISOString().split("T")[0]}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-semibold text-gray-900">
-                                            ₹{order.totalAmount}
+                                            ₹{order.total_amount}
                                         </p>
                                         <span
                                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
@@ -113,9 +112,9 @@ function Orders() {
                 {!isViewAll && <>
                     <div className="space-y-4">
                         {orders?.length > 0 ? (
-                            [...orders].reverse().slice(0, 5).map((order) => (
+                            [...orders].sort((a, b) => new Date(b.placed_at) - new Date(a.placed_at)).slice(0, 5).map((order) => (
                                 <div
-                                    key={order.orderId}
+                                    key={order.id}
                                     onClick={() => handleOrderClick(order)}
                                     className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
                                 >
@@ -125,16 +124,16 @@ function Orders() {
                                         </div>
                                         <div>
                                             <h3 className="font-medium text-gray-900">
-                                                {order.orderId}
+                                                {order.id}
                                             </h3>
                                             <p className="text-sm text-gray-600">
-                                                Placed on {new Date(order.date).toISOString().split("T")[0]}
+                                                Placed on {new Date(order.placed_at).toISOString().split("T")[0]}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-semibold text-gray-900">
-                                            ₹{order.totalAmount}
+                                            ₹{order.total_amount}
                                         </p>
                                         <span
                                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
@@ -172,7 +171,7 @@ function Orders() {
                                         Order Details
                                     </h2>
                                     <p className="text-sm text-gray-600">
-                                        {selectedOrder.orderId}
+                                        {selectedOrder.id}
                                     </p>
                                 </div>
                             </div>
@@ -193,7 +192,7 @@ function Orders() {
                                     <div>
                                         <p className="text-sm text-gray-600">Order Date</p>
                                         <p className="font-medium text-gray-900">
-                                            {new Date(selectedOrder.date).toLocaleDateString('en-US', {
+                                            {new Date(selectedOrder.placed_at).toLocaleDateString('en-US', {
                                                 year: 'numeric',
                                                 month: 'long',
                                                 day: 'numeric'
@@ -206,7 +205,7 @@ function Orders() {
                                     <div>
                                         <p className="text-sm text-gray-600">Payment</p>
                                         <p className="font-medium text-gray-900">
-                                            {selectedOrder.paymentId ? 'Paid Online' : 'Cash on Delivery'}
+                                            {selectedOrder.payment_status === 'COMPLETED' ? 'Paid Online' : 'Cash on Delivery'}
                                         </p>
                                     </div>
                                 </div>
@@ -232,19 +231,18 @@ function Orders() {
                                     {selectedOrder.items.map((item, index) => (
                                         <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                                             <img
-                                                src={item.image}
-                                                alt={item.name}
+                                                src={item.primary_image_url || '/placeholder-image.jpg'}
+                                                alt={item.product_name}
                                                 className="w-16 h-16 object-cover rounded-lg"
                                             />
                                             <div className="flex-1">
-                                                <h4 className="font-medium text-gray-900">{item.name}</h4>
-                                                <p className="text-sm text-gray-600">{item.type}</p>
+                                                <h4 className="font-medium text-gray-900">{item.product_name}</h4>
+                                                <p className="text-sm text-gray-600">Size: {item.variant_size}</p>
                                                 <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-semibold text-gray-900">₹{item.total}</p>
-                                                <p className="text-sm text-gray-600">₹{item.price} × {item.quantity}</p>
-                                                <p className="text-xs text-gray-500">Includes GST: ₹{item.gst}</p>
+                                                <p className="font-semibold text-gray-900">₹{item.total_price}</p>
+                                                <p className="text-sm text-gray-600">₹{item.final_unit_price} × {item.quantity}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -257,28 +255,34 @@ function Orders() {
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Subtotal</span>
                                         <span className="text-gray-900">
-                                            ₹{selectedOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
+                                            ₹{selectedOrder.subtotal_amount || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Shipping</span>
+                                        <span className="text-gray-900">
+                                            ₹{selectedOrder.shipping_amount || 0}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">GST</span>
                                         <span className="text-gray-900">
-                                            ₹{selectedOrder.items.reduce((sum, item) => sum + parseFloat(item.gst), 0)}
+                                            ₹{selectedOrder.tax_amount || 0}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-lg font-semibold border-t border-gray-200 pt-2">
                                         <span className="text-gray-900">Total Amount</span>
-                                        <span className="text-gray-900">₹{selectedOrder.totalAmount}</span>
+                                        <span className="text-gray-900">₹{selectedOrder.total_amount}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Payment Information */}
-                            {selectedOrder.paymentId && (
+                            {selectedOrder.payment_status === 'COMPLETED' && (
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     <h4 className="font-medium text-gray-900 mb-2">Payment Information</h4>
                                     <p className="text-sm text-gray-600">
-                                        Payment ID: {selectedOrder.paymentId}
+                                        Stripe Payment Confirmed
                                     </p>
                                 </div>
                             )}

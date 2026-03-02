@@ -24,6 +24,7 @@ import ProductDetails from '@/features/products/pages/ProductDetails';
 import CartPage from '@/features/cart/pages/CartPage';
 import WishlistPage from '@/features/wishlist/pages/WishlistPage';
 import Orders from '@/features/orders/pages/Orders';
+import PaymentPage from '@/features/orders/pages/Payment';
 
 // Marketing Pages
 import Home from '@/features/marketing/pages/Home';
@@ -56,6 +57,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<UserProfile />} />
         <Route element={<ProtectProfile />}>
           <Route path="/orders" element={<Orders />} />
+          <Route path="/payment/:orderId" element={<PaymentPage />} />
         </Route>
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<About />} />

@@ -241,8 +241,9 @@ const displayDiscount =
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        cartItems={[{ ...product, quantity }]}
+        cartItems={[{ ...product, price: displayPrice, quantity, variant_id: currentVariantId }]}
         totalAmount={(displayPrice * quantity) * 1.18}
+        isDirectBuy={true}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-14">
