@@ -455,7 +455,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems = [], totalAmount = 0, isDir
         street_address: formData.address, city: formData.city,
         state: formData.state, postal_code: formData.zipCode, country: formData.country,
       };
-      const payload = { shipping_address: addr, billing_address: addr };
+      const payload = {
+        shipping_address: addr,
+        billing_address: addr,
+        payment_method: paymentType === 'cod' ? 'COD' : 'ONLINE'
+      };
+
       if (isDirectBuy && cartItems.length > 0) {
         payload.variant_id = cartItems[0].variant_id || cartItems[0].id;
         payload.quantity = cartItems[0].quantity || 1;

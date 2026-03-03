@@ -112,7 +112,7 @@ function Orders() {
                 {!isViewAll && <>
                     <div className="space-y-4">
                         {orders?.length > 0 ? (
-                            [...orders].sort((a, b) => new Date(b.placed_at) - new Date(a.placed_at)).slice(0, 5).map((order) => (
+                            [...orders].slice(0, 5).map((order) => (
                                 <div
                                     key={order.id}
                                     onClick={() => handleOrderClick(order)}
@@ -205,7 +205,13 @@ function Orders() {
                                     <div>
                                         <p className="text-sm text-gray-600">Payment</p>
                                         <p className="font-medium text-gray-900">
-                                            {selectedOrder.payment_status === 'COMPLETED' ? 'Paid Online' : 'Cash on Delivery'}
+                                        {selectedOrder.payment_method === "ONLINE"
+                                            ? selectedOrder.is_paid
+                                            ? "Paid Online"
+                                            : "Online Payment Pending"
+                                            : selectedOrder.is_paid
+                                            ? "Cash on Delivery (Paid)"
+                                            : "Cash on Delivery"}
                                         </p>
                                     </div>
                                 </div>
@@ -278,7 +284,7 @@ function Orders() {
                             </div>
 
                             {/* Payment Information */}
-                            {selectedOrder.payment_status === 'COMPLETED' && (
+                            {selectedOrder.payment_method === "ONLINE" && selectedOrder.is_paid && (
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     <h4 className="font-medium text-gray-900 mb-2">Payment Information</h4>
                                     <p className="text-sm text-gray-600">

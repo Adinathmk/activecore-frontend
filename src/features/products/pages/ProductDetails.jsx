@@ -434,14 +434,6 @@ const displayDiscount =
                   {selectedSize && (
                     <span className="text-xs text-gray-500">
                       Selected: <strong>{selectedSize}</strong>
-                      {/* Show stock for selected variant */}
-                      {selectedVariant && (
-                        <span className={`ml-2 ${selectedVariant.available_stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                          ({selectedVariant.available_stock > 0
-                            ? `${selectedVariant.available_stock} left`
-                            : 'Out of stock'})
-                        </span>
-                      )}
                     </span>
                   )}
                 </div>

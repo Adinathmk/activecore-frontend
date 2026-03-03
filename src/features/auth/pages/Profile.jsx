@@ -6,6 +6,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import { getAccountOverviewAPI } from '@/features/orders/api/order.api';
 
 const UserProfile = () => {
 
@@ -32,6 +33,33 @@ const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [errors, setErrors] = useState({});
+  const [orderStats, setOrderStats] = useState({
+    totalOrders: 0,
+    confirmedOrders: 0,
+    deliveredOrders: 0,
+    cancelledOrders: 0,
+    totalSpent: 0
+  });
+
+  useEffect(() => {
+    const fetchOrderStats = async () => {
+      try {
+        const stats = await getAccountOverviewAPI();
+        setOrderStats({
+          totalOrders: stats.total_orders || stats.totalOrders || 0,
+          confirmedOrders: stats.confirmed_orders || stats.confirmed_orders|| 0,
+          deliveredOrders: stats.delivered_orders || stats.deliveredOrders || 0,
+          cancelledOrders: stats.cancelled_orders || stats.cancelledOrders || 0,
+          totalSpent: stats.total_spent || stats.totalSpent || 0
+        });
+      } catch (error) {
+        console.error("Failed to fetch order stats:", error);
+      }
+    };
+    if (currentUser) {
+      fetchOrderStats();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
@@ -171,30 +199,7 @@ const UserProfile = () => {
     }
   };
 
-  const getOrderStats = () => {
-    const orders = userData.orders || [];
-    const totalOrders = orders.length;
-    const pendingOrders = orders.filter(order =>
-      order.status === 'Processing' || order.status === 'Pending'
-    ).length;
-    const deliveredOrders = orders.filter(order =>
-      order.status === 'Delivered'
-    ).length;
-    const cancelledOrders = orders.filter(order =>
-      order.status === 'Cancelled'
-    ).length;
-    const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
-    return {
-      totalOrders,
-      pendingOrders,
-      deliveredOrders,
-      cancelledOrders,
-      totalSpent
-    };
-  };
-
-  const orderStats = getOrderStats();
 
   const getUserInitials = () => {
     const name = `${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim();
@@ -710,10 +715,10 @@ const UserProfile = () => {
                 <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                   <div className="flex items-center gap-3">
                     <Clock size={18} className="text-yellow-600" />
-                    <span className="text-gray-600">Pending Orders</span>
+                    <span className="text-gray-600">Confirmed Orders</span>
                   </div>
                   <span className="font-semibold text-yellow-600">
-                    {orderStats.pendingOrders}
+                    {orderStats.confirmedOrders}
                   </span>
                 </div>
 

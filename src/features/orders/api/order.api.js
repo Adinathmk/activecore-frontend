@@ -12,3 +12,9 @@ export const getOrdersAPI = async () => {
   const { data } = await axiosInstance.get(ORDER_ENDPOINTS.LIST);
   return data;
 };
+
+// Fetch account overview stats
+export const getAccountOverviewAPI = async () => {
+  const { data } = await axiosInstance.get(ORDER_ENDPOINTS.ACCOUNT_OVERVIEW);
+  return data;
+};
