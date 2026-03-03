@@ -39,18 +39,25 @@ function Orders() {
     };
 
     useEffect(() => {
-        const fetchUserOrders = async () => {
-            try {
-                const data = await getOrdersAPI();
-                setOrders(data);
-            } catch (err) {
-                console.error('Error fetching orders:', err);
-                toast.error('Failed to load orders data');
-            }
-        };
-        if (currentUser?.id) fetchUserOrders();
-    }, [currentUser?.id]);
+    const fetchUserOrders = async () => {
+        try {
+            const data = await getOrdersAPI();
+            setOrders(data);
+        } catch (err) {
+            console.error('Error fetching orders:', err);
+            toast.error('Failed to load orders data');
+        }
+    };
 
+    if (currentUser?.id) {
+        fetchUserOrders();
+        const timer = setTimeout(() => {
+            fetchUserOrders();
+        }, 500); // ⏳ wait 2 seconds for Stripe webhook update
+
+        return () => clearTimeout(timer);
+    }
+}, [currentUser?.id]);
     return (
         <>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:mx-30 md:my-10 mx-10 my-5">
