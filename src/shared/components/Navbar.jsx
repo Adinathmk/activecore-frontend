@@ -34,6 +34,7 @@ export default function Navbar() {
       // Close search modal (desktop)
       if (searchModalRef.current && !searchModalRef.current.contains(event.target)) {
         setIsSearchOpen(false);
+        setSearchValue('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -118,7 +119,7 @@ export default function Navbar() {
                   autoFocus={isSearchOpen}
                 />
                 {isSearchOpen && (
-                  <button onClick={() => setIsSearchOpen(false)} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full flex-shrink-0">
+                  <button onClick={() => {setIsSearchOpen(false); setSearchValue('');}} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full flex-shrink-0">
                     <X size={18} />
                   </button>
                 )}
@@ -228,7 +229,7 @@ export default function Navbar() {
               </div>
               {isMobileSearchOpen && searchValue && (
                 <div className="absolute top-full left-0 w-full z-50 mt-2">
-                  <SearchProductModal value={searchValue} />
+                  <SearchProductModal value={searchValue} setIsSearchOpen={setIsMobileSearchOpen}/>
                 </div>
               )}
             </div>
