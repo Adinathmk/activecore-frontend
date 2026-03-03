@@ -1,7 +1,7 @@
 import { Delete, Search } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import axiosInstance from '@/services/axiosInstance'
 import ProductForm from '@/features/admin/components/ProductForm';
+import { fetchAdminProductsApi, createAdminProductApi, updateAdminProductApi, deleteAdminProductApi } from '@/features/admin/api/admin.api';
 
 function ManageProducts() {
     const[products,setProducts]=useState([])
@@ -15,7 +15,7 @@ function ManageProducts() {
     const fetchProducts=async()=>{
             try{
                 setLoading(true)
-                const{data}=await axiosInstance.get('/products')
+                const{data}=await fetchAdminProductsApi()
                 setProducts(data)
             }
            catch (e) {
@@ -54,10 +54,10 @@ function ManageProducts() {
         try {
             if (editingProduct) {
             //  Edit existing product
-            await axiosInstance.put(`/products/${editingProduct.id}`, formData);
+            await updateAdminProductApi(editingProduct.id, formData);
             } else {
             //  Add new product
-            await axiosInstance.post('/products', formData);
+            await createAdminProductApi(formData);
             }
             fetchProducts();
         } catch (error) {
@@ -78,7 +78,7 @@ function ManageProducts() {
     const deleteProduct=async(id)=>{
         const updatedProducts=products.filter((product)=>product.id!==id)
         try {
-            await axiosInstance.delete(`/products/${id}`);
+            await deleteAdminProductApi(id);
             setProducts((prev) => prev.filter((product) => product.id !== id));
         }
         catch(error){

@@ -83,7 +83,7 @@ const initialToken = localStorage.getItem("access");
 const initialState = {
   user: null,
   accessToken: initialToken || null,
-  isAuthenticated: !!initialToken,
+  isAuthenticated: false,
 
   loadingLogin: false,
   loadingRegister: false,

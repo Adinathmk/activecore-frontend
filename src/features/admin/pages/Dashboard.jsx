@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
-import axiosInstance from '@/services/axiosInstance';
+import { fetchAdminUsersApi, fetchAdminProductsApi, fetchAdminOrdersApi } from '@/features/admin/api/admin.api';
 
 // Register chart components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -55,18 +55,19 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, productsRes] = await Promise.all([
-          axiosInstance.get('/users'),
-          axiosInstance.get('/products')
+        const [usersRes, productsRes, ordersRes] = await Promise.all([
+          fetchAdminUsersApi(),
+          fetchAdminProductsApi(),
+          fetchAdminOrdersApi()
         ]);
 
-        const Users = usersRes.data;
-        const Products = productsRes.data;
+        const Users = usersRes.data || [];
+        const Products = productsRes.data || [];
+        const Orders = ordersRes.data || [];
 
-        const TotalUsers = Users.filter(u => u.role !== 'admin').length;
+        const TotalUsers = Users.filter(u => u.role !== 'admin' && u.role !== 'Admin').length;
         const TotalProducts = Products.length;
 
-        const Orders = Users.flatMap(u => u.orders || []);
         const TotalSales = Orders.length;
         const TotalRevenue = Orders.reduce((acc, o) => acc + (parseFloat(o.totalAmount) || 0), 0);
         const FormattedTotalRevenue = TotalRevenue.toFixed(0);

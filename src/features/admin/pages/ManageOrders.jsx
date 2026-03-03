@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Download } from "lucide-react";
-import axiosInstance from '@/services/axiosInstance';
 import OrderDetailsModal, { OrderStatusBadge} from '@/features/admin/components/OrderDetailsModal';
+import { fetchAdminOrdersApi, updateAdminOrderStatusApi } from '@/features/admin/api/admin.api';
 
 function ManageOrders() {
   const [users, setUsers] = useState([]);
@@ -12,37 +12,20 @@ function ManageOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch Users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axiosInstance.get("/users");
-        setUsers(res.data || []);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-    };
-    fetchUsers();
-  }, []);
+  // Fetch Orders
+  const fetchOrders = async () => {
+    try {
+      const res = await fetchAdminOrdersApi();
+      setOrders(res.data || []);
+      setFilteredOrders(res.data || []);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+    }
+  };
 
-  
-  // Extract all orders
   useEffect(() => {
-    const allOrders = users.flatMap((user) =>
-      (user.orders || []).map((order) => ({
-        ...order,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          status: user.status,
-        },
-      }))
-    );
-    setOrders(allOrders);
-    setFilteredOrders(allOrders);
-  }, [users]);
+    fetchOrders();
+  }, []);
 
   // Apply Filters
   useEffect(() => {
@@ -61,41 +44,25 @@ function ManageOrders() {
     setFilteredOrders(filtered);
   }, [searchTerm, statusFilter, orders]);
 
-  const handleUpdateStatus = async (orderId, newStatus, userId) => {
+  const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       // 1️⃣ Update UI instantly
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.orderId === orderId ? { ...order, status: newStatus } : order
+          // Checking both orderId and id in case the real backend returns id
+          (order.orderId === orderId || order.id === orderId) ? { ...order, status: newStatus } : order
         )
       );
 
-      // 2️⃣ Find the user and update their orders
-      const userToUpdate = users.find(user => user.id === userId); // Remove duplicate condition
-      if (!userToUpdate) {
-        console.error("❌ User not found");
-        return;
-      }
-
-      // Handle case where user.orders might be undefined
-      const userOrders = userToUpdate.orders || [];
-      const updatedOrders = userOrders.map((order) =>
-        order.orderId === orderId ? { ...order, status: newStatus } : order
-      );
-
-      // 3️⃣ Send PATCH request for the user
-      await axiosInstance.patch(`/users/${userId}`, { orders: updatedOrders });
+      // 2️⃣ Send PATCH request 
+      await updateAdminOrderStatusApi(orderId, { status: newStatus });
 
       console.log("✅ Order status updated successfully!");
     } catch (error) {
       console.error("❌ Error updating order:", error);
       
-      // Revert UI update on error
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.orderId === orderId ? { ...order, status: order.status } : order
-        )
-      );
+      // Revert UI update on error by refetching orders
+      fetchOrders();
     }
   };
 
@@ -240,22 +207,22 @@ function ManageOrders() {
                   <tr key={order.orderId} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        #{order.orderId.slice(-8)}
+                        #{ (order.orderId || order.id || "").toString().slice(-8) }
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {order.user.name}
+                        {order?.user?.name || "Unknown User"}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {order.user.email}
+                        {order?.user?.email || "No Email"}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(order.date).toLocaleDateString()}
+                      {new Date(order.date || order.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      ₹{order.totalAmount}
+                      ₹{order.totalAmount || order.total_amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <OrderStatusBadge status={order.status} />
@@ -283,11 +250,11 @@ function ManageOrders() {
       {selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
-          user={selectedOrder.user}
+          user={selectedOrder.user || {}}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onUpdateStatus={(orderId, newStatus) => 
-            handleUpdateStatus(orderId, newStatus, selectedOrder.user.id)
+            handleUpdateStatus(selectedOrder.orderId || selectedOrder.id, newStatus)
           }
         />
       )}

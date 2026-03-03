@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '@/services/axiosInstance';
 import UserDetailsModal from '@/features/admin/components/UserDetailsModal';
+import { fetchAdminUsersApi, toggleBlockAdminUserApi, deleteAdminUserApi } from '@/features/admin/api/admin.api';
 
 
 function ManageUsers() {
@@ -13,11 +13,10 @@ function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ✅ Fetch users from backend
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data } = await axiosInstance.get('/users');
+      const { data } = await fetchAdminUsersApi();
       setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -57,7 +56,7 @@ function ManageUsers() {
   // ✅ Delete user
   const handleDelete = async (id) => {
     try {
-      await axiosInstance.delete(`/users/${id}`);
+      await deleteAdminUserApi(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -74,8 +73,8 @@ function ManageUsers() {
       // Determine new status
       const newStatus = user.status === 'Blocked' ? 'Active' : 'Blocked';
 
-      // Update on backend
-      await axiosInstance.patch(`/users/${id}`, { status: newStatus });
+      // Update on backend. Assuming it's a POST or PATCH toggle.
+      await toggleBlockAdminUserApi(id);
 
       // Update locally
       setUsers((prev) =>

@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import banner from "@/assets/image.avif";
 
 const SignInPage = () => {
   const navigate = useNavigate();
   const { loginUser, loadingLogin, sendOtp } = useAuth();
+
+  // ✅ Get user from Redux
+  const { user } = useSelector((state) => state.auth);
+
   const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -14,6 +19,21 @@ const SignInPage = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // ==============================
+  // Redirect After Login (SAFE)
+  // ==============================
+  useEffect(() => {
+    if (user) {
+      const role = user.role?.toLowerCase();
+
+      if (role === "admin") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,34 +71,28 @@ const SignInPage = () => {
     if (!validate()) return;
 
     try {
+      // ❌ Don't depend on return value
       await loginUser(formData);
-      navigate("/", { replace: true });
+      // Redirect handled in useEffect
     } catch (error) {
-      // Toast error is handled inside useAuth now
-      
-      // Look for indicators that the user isn't verified yet
-      // This is a common pattern: either an explicit code, or message strings.
-      // E.g., Django often returns `{"detail": "..."}` or `{"non_field_errors": ["...unverified..."]}`
       const errorStr = JSON.stringify(error).toLowerCase();
+
       if (
-        errorStr.includes("verified") || 
-        errorStr.includes("verify") || 
+        errorStr.includes("verified") ||
+        errorStr.includes("verify") ||
         errorStr.includes("activation") ||
         errorStr.includes("inactive")
       ) {
-         // Optionally you can add a toast to explicitly state why they were redirected:
-         // toast.info("Please verify your email to log in.");
-         
-         try {
-           setIsSendingOtp(true);
-           await sendOtp({ email: formData.email });
-         } catch (e) {
-           // Allow redirect even if sending fails (they can resend manually on the next page)
-         } finally {
-           setIsSendingOtp(false);
-         }
-         
-         navigate("/verify-otp", { state: { email: formData.email } });
+        try {
+          setIsSendingOtp(true);
+          await sendOtp({ email: formData.email });
+        } catch (e) {
+          // silent fail
+        } finally {
+          setIsSendingOtp(false);
+        }
+
+        navigate("/verify-otp", { state: { email: formData.email } });
       }
     }
   };
@@ -129,6 +143,7 @@ const SignInPage = () => {
                 <input
                   type="password"
                   name="password"
+                  autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${
@@ -158,11 +173,11 @@ const SignInPage = () => {
                 disabled={loadingLogin || isSendingOtp}
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
               >
-                {loadingLogin 
-                  ? "Signing In..." 
-                  : isSendingOtp 
-                    ? "Redirecting & Sending OTP..." 
-                    : "Sign In"}
+                {loadingLogin
+                  ? "Signing In..."
+                  : isSendingOtp
+                  ? "Redirecting & Sending OTP..."
+                  : "Sign In"}
               </button>
             </form>
 
