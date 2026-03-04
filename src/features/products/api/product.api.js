@@ -3,7 +3,7 @@ import { PRODUCT_ENDPOINTS } from "./product.endpoints";
 
 export const getProducts = async (params = {}) => {
   const { data } = await axiosInstance.get(PRODUCT_ENDPOINTS.LIST, { params });
-  return data.results || data;
+  return data;
 };
 
 export const getProductById = async (slug) => {

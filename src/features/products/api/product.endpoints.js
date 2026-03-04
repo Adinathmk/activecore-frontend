@@ -5,5 +5,5 @@ export const PRODUCT_ENDPOINTS = {
   DETAIL: (slug) => `${API_BASE}/products/${slug}/`,
   RATE: (slug) => `${API_BASE}/products/${slug}/rate/`,
   FEATURED: `${API_BASE}/products/home/featured/`,
-  SEARCH: `${API_BASE}/products/search/`, // ✅ ADD THIS
+  SEARCH: `${API_BASE}/products/search/`, 
 };

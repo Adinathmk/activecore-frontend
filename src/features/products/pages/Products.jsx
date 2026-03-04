@@ -16,7 +16,8 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage]   = useState(1);
-  const productsPerPage = 12;
+  const [totalPages, setTotalPages]     = useState(1);
+  const [totalItems, setTotalItems]     = useState(0);
 
   // ── Filter state lifted up here so it survives ProductFilter re-renders ───
   const [selectedSize, setSelectedSize] = useState("");
@@ -30,7 +31,15 @@ export default function Products() {
       setLoading(true);
       setError(null);
       const data = await getProducts({ category, ...params });
-      setProducts(data);
+      if (data && data.results !== undefined) {
+        setProducts(data.results);
+        setTotalPages(data.total_pages || 1);
+        setTotalItems(data.count || 0);
+      } else {
+        setProducts(Array.isArray(data) ? data : []);
+        setTotalPages(1);
+        setTotalItems(Array.isArray(data) ? data.length : 0);
+      }
     } catch (err) {
       setError("Failed to load products");
     } finally {
@@ -45,15 +54,26 @@ export default function Products() {
     setMaxPrice("");
     setSortBy("");
     setCurrentPage(1);
-    fetchProducts({});
+    fetchProducts({ page: 1 });
   }, [fetchProducts]);
 
   // ── Called when user clicks Apply or Reset in ProductFilter ───────────────
   const handleApply = useCallback((params) => {
     setIsFilterOpen(false);
     setCurrentPage(1);
-    fetchProducts(params);
+    fetchProducts({ ...params, page: 1 });
   }, [fetchProducts]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    fetchProducts({
+      size: selectedSize || undefined,
+      min_price: minPrice || undefined,
+      max_price: maxPrice || undefined,
+      sort: sortBy || undefined,
+      page: newPage
+    });
+  };
 
   // ── Lock body scroll when mobile drawer open ──────────────────────────────
   useEffect(() => {
@@ -67,11 +87,7 @@ export default function Products() {
   }, [currentPage]);
 
   // ── Pagination ────────────────────────────────────────────────────────────
-  const totalPages      = Math.ceil(products.length / productsPerPage);
-  const currentProducts = products.slice(
-    (currentPage - 1) * productsPerPage,
-    currentPage * productsPerPage
-  );
+  const currentProducts = products;
 
   const categoryNames = { men: "Men", women: "Women", accessories: "Accessories" };
 
@@ -130,7 +146,7 @@ export default function Products() {
                   </span>
                 )}
               </button>
-              <span className="text-sm text-gray-400">{products.length} items</span>
+              <span className="text-sm text-gray-400">{totalItems} items</span>
             </div>
 
             {/* Heading */}
@@ -140,7 +156,7 @@ export default function Products() {
                 {categoryNames[category] ?? "All"}'s Collection
               </h1>
               <span className="hidden lg:block text-sm text-gray-400">
-                {products.length} items
+                {totalItems} items
               </span>
             </div>
 
@@ -205,7 +221,7 @@ export default function Products() {
                 {totalPages > 1 && (
                   <div className="flex justify-center mt-10 gap-2 flex-wrap items-center">
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                       disabled={currentPage === 1}
                       className="p-2 disabled:opacity-30"
                     >
@@ -214,7 +230,7 @@ export default function Products() {
                     {Array.from({ length: totalPages }, (_, i) => (
                       <button
                         key={i}
-                        onClick={() => setCurrentPage(i + 1)}
+                        onClick={() => handlePageChange(i + 1)}
                         className={`px-3 py-1 border rounded text-sm transition-colors ${
                           currentPage === i + 1
                             ? "bg-black text-white border-black"
@@ -225,7 +241,7 @@ export default function Products() {
                       </button>
                     ))}
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                      onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                       disabled={currentPage === totalPages}
                       className="p-2 disabled:opacity-30"
                     >
