@@ -37,6 +37,7 @@ import Dashboard from "@/features/admin/pages/Dashboard";
 import ManageProducts from "@/features/admin/pages/ManageProducts";
 import ManageOrders from "@/features/admin/pages/ManageOrders";
 import ManageUsers from "@/features/admin/pages/ManageUsers";
+import ManageInventory from "@/features/admin/pages/ManageInventory";
 
 const AppRoutes = () => {
   return (
@@ -78,6 +79,7 @@ const AppRoutes = () => {
         <Route element={<AdminLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/manageProducts" element={<ManageProducts />} />
+          <Route path="/manageInventory" element={<ManageInventory />} />
           <Route path="/manageOrders" element={<ManageOrders />} />
           <Route path="/manageUsers" element={<ManageUsers />} />
         </Route>

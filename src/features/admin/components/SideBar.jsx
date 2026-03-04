@@ -8,6 +8,7 @@ import {
   Settings,
   ShoppingCart,
   Users,
+  Box,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -57,6 +58,7 @@ function SideBar() {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard ,url:'/dashboard'},
     { id: "products", label: "Products", icon: Package ,url:'/manageProducts'},
+    { id: "inventory", label: "Inventory", icon: Box ,url:'/manageInventory'},
     { id: "orders", label: "Orders", icon: ShoppingCart ,url:'/manageOrders'},
     { id: "customers", label: "Customers", icon: Users ,url:'/manageUsers'},
   ];

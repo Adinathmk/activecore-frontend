@@ -1,7 +1,11 @@
 import { Delete, Search } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import ProductForm from '@/features/admin/components/ProductForm';
-import { fetchAdminProductsApi, createAdminProductApi, updateAdminProductApi, deleteAdminProductApi } from '@/features/admin/api/admin.api';
+import CategoryForm from '@/features/admin/components/CategoryForm';
+import ProductTypeForm from '@/features/admin/components/ProductTypeForm';
+import { fetchAdminProductsApi, createAdminProductApi, updateAdminProductApi, deleteAdminProductApi, createAdminCategoryApi, createAdminProductTypeApi } from '@/features/admin/api/admin.api';
+import { toast } from 'react-toastify';
+import { parseApiError } from '@/features/admin/utils/errorHandler';
 
 function ManageProducts() {
     const[products,setProducts]=useState([])
@@ -10,6 +14,8 @@ function ManageProducts() {
     const[category,setCategory]=useState('All Categories')
     const[loading, setLoading] = useState(true)
     const[isFormOpen,setFormOpen]=useState(false)
+    const[isCategoryFormOpen, setCategoryFormOpen] = useState(false);
+    const[isProductTypeFormOpen, setProductTypeFormOpen] = useState(false);
     const[editingProduct,setEditingProduct]=useState(null)
 
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -24,18 +30,18 @@ function ManageProducts() {
         };
     }, [productName]);
 
-    const fetchProducts=async(search = '')=>{
-            try{
-                setLoading(true)
-                const { data } = await fetchAdminProductsApi(search);
-                setProducts(data?.results || data);
-            }
-           catch (e) {
-                console.error("Error fetching products:", e);
-            } finally {
-                setLoading(false)
-            }
-    }
+    const fetchProducts = async (search = '') => {
+        try {
+            setLoading(true);
+            const { data } = await fetchAdminProductsApi(search);
+            setProducts(data?.results || data || []);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            toast.error(parseApiError(error, "Failed to load products."));
+        } finally {
+            setLoading(false);
+        }
+    };
     
     useEffect(()=>{        
         fetchProducts(debouncedSearch)        
@@ -57,18 +63,19 @@ function ManageProducts() {
     const productOnSave = async (formData) => {
         try {
             if (editingProduct) {
-            //  Edit existing product
-            await updateAdminProductApi(editingProduct.id, formData);
+                await updateAdminProductApi(editingProduct.id, formData);
+                toast.success("Product updated successfully!");
             } else {
-            //  Add new product
-            await createAdminProductApi(formData);
+                await createAdminProductApi(formData);
+                toast.success("Product created successfully!");
             }
-            fetchProducts();
+            setFormOpen(false);
+            fetchProducts(debouncedSearch);
         } catch (error) {
             console.error("Error saving product:", error);
-            toast.error("Failed to save product!");
+            toast.error(parseApiError(error, "Failed to save product."));
         } finally {
-            setEditingProduct(null); 
+            setEditingProduct(null);
         }
     };
 
@@ -79,20 +86,43 @@ function ManageProducts() {
         setFormOpen(false);
         setEditingProduct(null)
     };
-    const deleteProduct=async(id)=>{
-        const updatedProducts=products.filter((product)=>product.id!==id)
+    const deleteProduct = async (id) => {
+        if (!window.confirm("Delete this product? This cannot be undone.")) return;
         try {
             await deleteAdminProductApi(id);
-            setProducts((prev) => prev.filter((product) => product.id !== id));
-        }
-        catch(error){
+            setProducts((prev) => prev.filter((p) => p.id !== id));
+            toast.success("Product deleted.");
+        } catch (error) {
             console.error("Error deleting product:", error);
-        }       
-        
-    }
+            toast.error(parseApiError(error, "Failed to delete product."));
+        }
+    };
+    
+    const handleCategorySave = async (formData) => {
+        try {
+            await createAdminCategoryApi(formData);
+            toast.success("Category created successfully!");
+        } catch (error) {
+            console.error("Error creating category:", error);
+            toast.error(parseApiError(error, "Failed to create category."));
+        }
+    };
+
+    const handleProductTypeSave = async (formData) => {
+        try {
+            await createAdminProductTypeApi(formData);
+            toast.success("Product Type created successfully!");
+        } catch (error) {
+            console.error("Error creating product type:", error);
+            toast.error(parseApiError(error, "Failed to create product type."));
+        }
+    };
+
     return (      
         <div className='bg-white min-h-screen p-4 md:p-6 lg:p-8'>
             <ProductForm  isFormOpen={isFormOpen} setFormOpen={setFormOpen} onSave={ productOnSave} product={editingProduct} onClose={onClose}/>                                    
+            <CategoryForm isFormOpen={isCategoryFormOpen} onSave={handleCategorySave} onClose={() => setCategoryFormOpen(false)} />
+            <ProductTypeForm isFormOpen={isProductTypeFormOpen} onSave={handleProductTypeSave} onClose={() => setProductTypeFormOpen(false)} />
             <div className='max-w-7xl mx-auto'>
                 {/* Header Section */}
                 <div className='mb-8'>
@@ -101,11 +131,18 @@ function ManageProducts() {
                             <h1 className='font-bold text-2xl lg:text-3xl text-gray-900'>Manage Products</h1>
                             <p className='text-gray-600 mt-1'>Manage your product inventory and listings</p>
                         </div>
-                        <button className='cursor-pointer bg-gray-900 hover:bg-gray-800 text-white px-4 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto flex items-center justify-center gap-2'
-                            onClick={()=>{setEditingProduct(null);setFormOpen(true)}}>
-                            <span>+</span>
-                            <span>Add New Product</span>
-                        </button>
+                        <div className='flex flex-wrap items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0'>
+                            <button className='cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 text-sm rounded-lg font-medium transition-colors shadow-sm w-full sm:w-auto flex items-center justify-center gap-2'
+                                onClick={() => setProductTypeFormOpen(true)}>
+                                <span>+</span>
+                                <span>Add Type</span>
+                            </button>
+                            <button className='cursor-pointer bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto flex items-center justify-center gap-2'
+                                onClick={()=>{setEditingProduct(null);setFormOpen(true)}}>
+                                <span>+</span>
+                                <span>Add New Product</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Filters Section */}
@@ -161,17 +198,18 @@ function ManageProducts() {
                             <table className="min-w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
-                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Image</th>
                                         <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Name</th>
-                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Price</th>
-                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Stock</th>
+                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Type</th>
+                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Status</th>
+                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Rating</th>
+                                        <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Created</th>
                                         <th className="text-left p-4 font-semibold text-gray-700 text-sm uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {filteredProducts.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" className="p-8 text-center text-gray-500">
+                                            <td colSpan="6" className="p-8 text-center text-gray-500">
                                                 <div className="flex flex-col items-center justify-center">
                                                     <Search size={48} className="text-gray-300 mb-3" />
                                                     <p className="text-lg font-medium">No products found</p>
@@ -183,33 +221,38 @@ function ManageProducts() {
                                         filteredProducts.map((product) => (
                                             <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                 <td className="p-4">
-                                                    <div className="h-16 w-16 md:h-20 md:w-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                                                        <img
-                                                            src={product?.images?.[0] || "https://via.placeholder.com/150?text=No+Image"}
-                                                            alt={product.name}
-                                                            className="h-full w-full object-cover"
-                                                            
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
                                                     <div>
                                                         <p className="font-medium text-gray-900">{product.name}</p>
                                                         <p className="text-sm text-gray-500 capitalize">{product.category}</p>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="font-semibold text-gray-900">₹{product.price}</span>
+                                                    <span className="text-sm text-gray-700 capitalize">{product.product_type}</span>
                                                 </td>
                                                 <td className="p-4">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                        product.count > 10 
+                                                        product.is_active 
                                                             ? 'bg-green-100 text-green-800' 
-                                                            : product.count > 0 
-                                                            ? 'bg-yellow-100 text-yellow-800'
                                                             : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                        {product.count > 0 ? `${product.count} in stock` : 'Out of stock'}
+                                                        {product.is_active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    {product.is_featured && (
+                                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                            Featured
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-sm font-medium text-gray-900">{product.avg_rating || '0.0'}</span>
+                                                        <span className="text-yellow-500 text-sm">★</span>
+                                                        <span className="text-xs text-gray-500">({product.rating_count || 0})</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className="text-sm text-gray-500">
+                                                        {product.created_at ? new Date(product.created_at).toLocaleDateString() : '—'}
                                                     </span>
                                                 </td>
                                                 <td className="p-4">

@@ -10,6 +10,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   
   const [email, setEmail] = useState("");
+  const [channel, setChannel] = useState("email");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,10 +20,13 @@ const ResetPassword = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  // Initialize email from state if navigated from ForgotPassword
+  // Initialize email and channel from state if navigated from ForgotPassword
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
+    }
+    if (location.state?.channel) {
+      setChannel(location.state.channel);
     }
   }, [location]);
 
@@ -60,7 +64,7 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      await resetPassword({ email, otp, new_password: newPassword });
+      await resetPassword({ email, otp, new_password: newPassword, channel });
       navigate("/login", { replace: true });
     } catch (error) {
        // Caught and toasted in useAuth
@@ -77,7 +81,7 @@ const ResetPassword = () => {
 
     setResendLoading(true);
     try {
-      await forgotPassword({ email });
+      await forgotPassword({ email, channel });
       setCountdown(60); // 60 seconds cooldown
     } catch (error) {
        // Caught and toasted in useAuth
@@ -101,6 +105,7 @@ const ResetPassword = () => {
         </div>
 
         <form onSubmit={handleReset} className="space-y-5">
+          {/* Display hidden channel input or read-only indicator if desired, but not strictly necessary for functionality. We'll simply submit it. */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">Email Address</label>
             <input

@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { toast } from 'react-toastify';
 import CheckoutModal from '@/shared/components/BuyingModal';
 import { getProductById } from '@/features/products/api/product.api';
+import ProductReviewSection from '@/features/products/components/ProductReviewSection';
 
 const ProductDetails = () => {
   const navigate = useNavigate();
@@ -28,22 +29,23 @@ const ProductDetails = () => {
   
 
   // ── Fetch product by slug ─────────────────────────────────────────────────
-  useEffect(() => {
+  const fetchProduct = React.useCallback(async () => {
     if (!slug) return;
-    const fetchProduct = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getProductById(slug);
-        setProduct(data);
-      } catch (err) {
-        console.error('Error fetching product:', err);
-        toast.error('Failed to load product');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProduct();
+    setIsLoading(true);
+    try {
+      const data = await getProductById(slug);
+      setProduct(data);
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      toast.error('Failed to load product');
+    } finally {
+      setIsLoading(false);
+    }
   }, [slug]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   // ── Derived values from the variant-based API response ────────────────────
   const derived = useMemo(() => {
@@ -577,6 +579,14 @@ const displayDiscount =
           </div>
         </div>
       </div>
+
+      {/* ── Reviews Section ──────────────────────────────────────────────── */}
+      <ProductReviewSection
+        slug={slug}
+        avgRating={product.avg_rating}
+        ratingCount={product.rating_count}
+        onRefresh={fetchProduct}
+      />
     </div>
   );
 };

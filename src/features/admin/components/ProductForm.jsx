@@ -1,381 +1,424 @@
-    import { X, XCircle, XIcon } from "lucide-react";
-    import React, { useEffect, useState } from "react";
+import { X, XCircle, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { fetchAdminCategoriesApi, fetchAdminProductTypesApi, fetchAdminProductDetailApi } from "@/features/admin/api/admin.api";
+import { toast } from "react-toastify";
 
-    function ProductForm({ isFormOpen,onSave,product,onClose}) {
-    
+function ProductForm({ isFormOpen, onSave, product, onClose }) {
+  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [productTypes, setProductTypes] = useState([]);
 
-    useEffect(()=>{
-         if (product) {
-            setFormData({
-                ...formData,
-                ...product,
-            });
-        }
-        else{
-           setFormData({
-                name: "",
-                description: "",
-                price: "",
-                prevPrice: "",
-                count: "",
-                images: [""],
-                category: "men",
-                type: "",
-                rating: "",
-                reviews: "",
-                sizes: [],
-                features: [""],
-                isNewArrival: false,
-                isTopSelling: false,
-                is_active: true,
-            });
-        }
-    },[product])
+  const defaultFormData = {
+    name: "",
+    description: "",
+    category: "",
+    product_type: "",
+    isNewArrival: false,
+    isTopSelling: false,
+    is_featured: false,
+    is_active: true,
+    features: [""],
+    images: [{ image_url: "", is_primary: true, is_secondary: false }],
+  };
 
-    useEffect(() => {
+  const [formData, setFormData] = useState(defaultFormData);
+
+
+
+  useEffect(() => {
+  if (!isFormOpen) return;
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const [catRes, typeRes] = await Promise.all([
+        fetchAdminCategoriesApi(),
+        fetchAdminProductTypesApi(),
+      ]);
+
+      setCategories(catRes.data);
+      setProductTypes(typeRes.data);
+
+      if (product) {
+        const detailRes = await fetchAdminProductDetailApi(product.id);
+        const detail = detailRes.data;
+
+        setFormData({
+          name: detail.name || "",
+          description: detail.description || "",
+          category: String(detail.category?.id || ""),
+          product_type: String(detail.product_type?.id || ""),
+          isNewArrival: detail.is_new_arrival || false,
+          isTopSelling: detail.is_top_selling || false,
+          is_featured: detail.is_featured || false,
+          is_active: detail.is_active ?? true,
+          features: detail.features?.length
+            ? detail.features.map((f) => f.text)
+            : [""],
+          images: detail.images?.length
+            ? detail.images.map((img) => ({
+                image_url: img.image_url,
+                is_primary: img.is_primary,
+                is_secondary: img.is_secondary,
+              }))
+            : [{ image_url: "", is_primary: true, is_secondary: false }],
+
+        });
+      } else {
+        setFormData(defaultFormData);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load form data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadData();
+}, [isFormOpen, product]);
+
+  useEffect(() => {
     if (isFormOpen) {
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden"; // ✅ stop scroll on html too
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     } else {
-        document.body.style.overflow = "auto";
-        document.documentElement.style.overflow = "intial";
+      document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "initial";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "initial";
+    };
+  }, [isFormOpen]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
+  // -- Features --
+  const handleFeatureChange = (index, value) => {
+    const updated = [...formData.features];
+    updated[index] = value;
+    setFormData({ ...formData, features: updated });
+  };
+  const addFeature = () => setFormData({ ...formData, features: [...formData.features, ""] });
+  const deleteFeature = (index) => {
+    if (formData.features.length === 1) return;
+    setFormData({ ...formData, features: formData.features.filter((_, i) => i !== index) });
+  };
+
+  // -- Images --
+  const handleImageChange = (index, field, value) => {
+    let updated = [...formData.images];
+    
+    // Enforce exactly one primary image
+    if (field === "is_primary" && value === true) {
+      updated = updated.map((img, i) => ({
+        ...img,
+        is_primary: i === index,
+        is_secondary: i === index ? false : img.is_secondary, // Can't be primary and secondary
+      }));
+    } else {
+      updated[index][field] = value;
+    }
+    setFormData({ ...formData, images: updated });
+  };
+  const addImage = () => setFormData({ ...formData, images: [...formData.images, { image_url: "", is_primary: false, is_secondary: false }] });
+  const deleteImage = (index) => {
+    if (formData.images.length === 1) return;
+    setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) });
+  };
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.category || !formData.product_type) {
+        toast.error("Category and Product Type are required.");
+        return;
     }
 
-    return () => {
-        document.body.style.overflow = "auto";
-        document.documentElement.style.overflow = "initial";
-    };
-    }, [isFormOpen]);
-
-
-    const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        price: "",
-        prevPrice: "",
-        count: "",
-        images: [""],
-        category: "men",
-        type: "",
-        rating: "",
-        reviews: "",
-        sizes: [],
-        features: [""],
-        isNewArrival: false,
-        isTopSelling: false,
-        is_active: true,
-    });
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData({
-        ...formData,
-        [name]: type === "checkbox" ? checked : value,
-        });
+    // Clean payload
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      category: parseInt(formData.category, 10),
+      product_type: parseInt(formData.product_type, 10),
+      is_new_arrival: formData.isNewArrival,
+      is_top_selling: formData.isTopSelling,
+      is_featured: formData.is_featured,
+      is_active: formData.is_active,
+      features: formData.features.filter(f => f.trim() !== ""),
+      images: formData.images.filter(img => img.image_url.trim() !== ""),
     };
 
-    const handleArrayChange = (index, field, value) => {
-        const updated = [...formData[field]];
-        updated[index] = value;
-        setFormData({ ...formData, [field]: updated });
-    };
+    if (product) {
+      onSave({ ...payload, id: product.id });
+    } else {
+      onSave(payload);
+    }
+  };
 
-    const addArrayField = (field) => {
-        setFormData({ ...formData, [field]: [...formData[field], ""] });
-    };
+  if (!isFormOpen) return null;
 
-    const deleteArrayField = (index, field) => {
-        if(formData[field].length===1){
-            return null
-        }
-        const updated = formData[field].filter((_, i) => i !== index);
-        setFormData({ ...formData, [field]: updated });
-    };
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[100] px-2 sm:px-4 md:px-4 overflow-y-auto py-4">
+      <div className="bg-white w-full max-w-4xl rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl p-4 sm:p-5 md:p-6 relative mx-2 my-auto max-h-[95vh] overflow-y-auto">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 text-gray-400 hover:text-gray-600 bg-white rounded-full p-1 shadow-sm transition-colors z-10"
+        >
+          <X size={20} className="sm:w-6 sm:h-6" />
+        </button>
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const data={...formData,created_at:new Date().toISOString()}
-        if (product) {
-            onSave({ ...formData, id: product.id }); 
-        } else {
-            onSave(data);
-        }
-        onClose();
-    };
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 text-center sm:text-left border-b pb-4">
+          {product ? "Edit Product" : "Add New Product"}
+        </h2>
 
-    
-    if (!isFormOpen) return null;
-
-    return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 px-2 sm:px-4 md:px-4 overflow-y-auto py-4">
-        <div className="bg-white w-full max-w-3xl rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl p-4 sm:p-5 md:p-5 relative mx-2 my-auto ">
-            {/* Close button */}
-            <button
-            onClick={onClose}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 text-gray-400 hover:text-gray-600 bg-white rounded-full p-1 shadow-sm"
-            >
-            <X size={18} className="sm:w-5 sm:h-5" />
-            </button>
-
-            {/* Header */}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-4 sm:mb-4 text-center sm:text-left">
-            Add New Product
-            </h2>
-
-            <form onSubmit={handleSubmit} className="sm:space-y-1">
-            {/* Basic Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                <label className="text-xs sm:text-sm text-gray-600">Product Name</label>
-                <input
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* --- Basic Info --- */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-gray-700">Product Name *</label>
+                  <input
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full mt-1 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                    placeholder="Geo Seamless T-Shirt"
+                    className="w-full mt-1.5 p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors shadow-sm"
+                    placeholder="E.g. Geo Seamless T-Shirt"
                     required
-                />
+                  />
                 </div>
+                
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-gray-700">Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-1.5 p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors shadow-sm"
+                    rows={3}
+                    placeholder="Detailed product description..."
+                  />
+                </div>
+
                 <div>
-                <label className="text-xs sm:text-sm text-gray-600">Category</label>
-                <select
+                  <label className="text-sm font-medium text-gray-700">Category *</label>
+                  <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full mt-1 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors "
-                >
-                    <option value="men">Men</option>
-                    <option value="women">Women</option>
-                    <option value="kids">Kids</option>
-                </select>
+                    required
+                    className="w-full mt-1.5 p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors shadow-sm bg-white"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Product Type *</label>
+                  <select
+                    name="product_type"
+                    value={formData.product_type}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-1.5 p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-colors shadow-sm bg-white"
+                  >
+                    <option value="">Select Product Type</option>
+                    {productTypes.map((pt) => (
+                      <option key={pt.id} value={String(pt.id)}>
+                        {pt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            {/* Description */}
-            <div>
-                <label className="text-xs sm:text-sm text-gray-600">Description</label>
-                <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                rows={2}
-                placeholder="Write a short product description..."
-                />
-            </div>
-
-            {/* Price and Stock */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                <div>
-                <label className="text-xs sm:text-sm text-gray-600 ">Price</label>
-                <input
-                    type="number"
-                    name="price"
-                    min="0"
-                    value={formData.price}
-                    onChange={handleChange}
-                    placeholder="Price"
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                    required
-                />
-                </div>
-                <div>
-                <label className="text-xs sm:text-sm text-gray-600 ">Previous Price</label>
-                <input
-                    type="number"
-                    name="prevPrice"
-                    min='0'
-                    value={formData.prevPrice}
-                    onChange={handleChange}
-                    placeholder="Previous Price"
-                    required
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                />
-                </div>
-                <div>
-                <label className="text-xs sm:text-sm text-gray-600 ">Stock Count</label>
-                <input
-                    type="number"
-                    name="count"
-                    min='0'
-                    value={formData.count}
-                    onChange={handleChange}
-                    placeholder="Stock Count"
-                    required
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                />
-                </div>
-            </div>
-
-            {/* Images */}
-            <div>
-                <label className="text-xs sm:text-sm text-gray-600">Image URLs</label>
-                {formData.images.map((imgUrl, i) => (
-                <div className="relative">
-                    <input
-                    
-                    key={i}
-                    value={imgUrl}
-                    required
-                    onChange={(e) => handleArrayChange(i, "images", e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className=" w-full mt-1 mb-2 p-3 sm:pr-9 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"  
-                    />
-                    <XCircle  className="absolute right-3 top-1/3   hover:text-red-600 cursor-pointer" size={20}
-                    onClick={()=>deleteArrayField(i,"images")}/>
-                </div>    
-                
-                
-                ))}
+            {/* --- Images Section --- */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Images</h3>
                 <button
-                type="button"
-                onClick={() => addArrayField("images")}
-                className="text-blue-600 text-xs sm:text-sm hover:underline mt-1"
+                  type="button"
+                  onClick={addImage}
+                  className="text-xs font-medium bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1 shadow-sm"
                 >
-                + Add another image
+                  <Plus size={14} /> Add Image
                 </button>
-            </div>
+              </div>
 
-            {/* Sizes */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4"> 
-                <div>
-                    <label className="text-xs sm:text-sm text-gray-600">Available Sizes</label>
-                    <div className="flex flex-wrap gap-2 sm:gap-3 mt-2">
-                        {["S", "M", "L", "XL"].map((size) => (
-                            <label key={size} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-700">
-                            <input
-                                type="checkbox"
-                                checked={formData.sizes.includes(size)}
-                                onChange={(e) => {
-                                const updated = e.target.checked
-                                    ? [...formData.sizes, size]
-                                    : formData.sizes.filter((s) => s !== size);
-                                setFormData({ ...formData, sizes: updated });
-                                }}
-                                className="w-4 h-4"
-                            />
-                            {size}
-                            </label>
-                        ))}                    
+              <div className="space-y-3">
+                {formData.images.map((img, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
+                    <div className="flex-1 w-full">
+                      <input
+                        type="url"
+                        value={img.image_url}
+                        onChange={(e) => handleImageChange(i, "image_url", e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-300"
+                        required={i === 0}
+                      />
                     </div>
-                </div>                
-                <div>
-                    <label className="text-xs sm:text-sm text-gray-600 ">Rating</label>
-                    <input
-                        type="number"
-                        name="rating"
-                        min="0"
-                        value={formData.rating}
-                        onChange={handleChange}
-                        placeholder="Rating"
-                        className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="text-xs sm:text-sm text-gray-600 ">Reviews</label>
-                    <input
-                        type="number"
-                        name="reviews"
-                        min="0"
-                        value={formData.reviews}
-                        onChange={handleChange}
-                        placeholder="Reviews"
-                        className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                        required
-                    />
-                </div>
-            </div>
-
-            {/* Features */}
-            <div>
-                <label className="text-xs sm:text-sm text-gray-600">Features</label>
-                
-                {formData.features.map((feature, i) => (
-                <div className="relative">
-                    <input
-                        key={i}
-                        value={feature}
-                        required
-                        onChange={(e) =>
-                        handleArrayChange(i, "features", e.target.value)
-                        }
-                        placeholder="Feature description"
-                        className="w-full mt-1 mb-2 p-3 sm:pr-10  text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                    />
-                        <XCircle  className="absolute right-3 top-1/3 hover:text-red-600 cursor-pointer" size={20}
-                    onClick={()=>deleteArrayField(i,"features")}/>
-                </div>
+                    <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0 px-1">
+                      <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="primary_image"
+                          checked={img.is_primary}
+                          onChange={(e) => handleImageChange(i, "is_primary", e.target.checked)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        Primary
+                      </label>
+                      <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={img.is_secondary}
+                          onChange={(e) => handleImageChange(i, "is_secondary", e.target.checked)}
+                          disabled={img.is_primary}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+                        />
+                        Secondary
+                      </label>
+                      {formData.images.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => deleteImage(i)}
+                          className="text-gray-400 hover:text-red-500 ml-auto sm:ml-2"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ))}
-               
-                
+              </div>
+            </div>
+
+            {/* --- Features Section --- */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Features</h3>
                 <button
-                type="button"
-                onClick={() => addArrayField("features")}
-                className="text-blue-600 text-xs sm:text-sm hover:underline mt-1"
+                  type="button"
+                  onClick={addFeature}
+                  className="text-xs font-medium bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1 shadow-sm"
                 >
-                + Add another feature
+                  <Plus size={14} /> Add Feature
                 </button>
+              </div>
+              <div className="space-y-3">
+                {formData.features.map((feature, i) => (
+                  <div key={i} className="flex items-center relative">
+                    <input
+                      value={feature}
+                      onChange={(e) => handleFeatureChange(i, e.target.value)}
+                      placeholder="E.g. Breathable tech fabric"
+                      className="w-full p-2.5 pr-10 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-300 shadow-sm"
+                    />
+                    {formData.features.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => deleteFeature(i)}
+                        className="absolute right-3 text-gray-400 hover:text-red-500"
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Toggles */}
-            <div className="grid grid-cols-1  md:grid-cols-3 gap-3 sm:gap-4">
-                <div className="flex gap-2 items-center mt-5">
-                    <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                    <input
-                        type="checkbox"
-                        name="isNewArrival"
-                        checked={formData.isNewArrival}
-                        onChange={handleChange}
-                        className="w-4 h-4"
-                    />
-                    New Arrival
-                    </label>
-                    <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                    <input
-                        type="checkbox"
-                        name="isTopSelling"
-                        checked={formData.isTopSelling}
-                        onChange={handleChange}
-                        className="w-4 h-4"
-                    />
-                    Top Selling
-                    </label>                    
-                </div>
-                <div>
-                    <label className="text-xs sm:text-sm text-gray-600">Type</label>
-                    <input
-                        name="type"
-                        value={formData.type}
-                        onChange={handleChange}
-                        className="w-full mt-1 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-colors"
-                        placeholder="Geo Seamless T-Shirt"
-                        required
-                    />
-                </div>                
+            {/* --- Visibility & Status Flags --- */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-4">Status & Flags</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer bg-white p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                  />
+                  <span className="font-medium">Active (Visible)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer bg-white p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="is_featured"
+                    checked={formData.is_featured}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                  />
+                  <span className="font-medium">Featured (Max 4)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer bg-white p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="isNewArrival"
+                    checked={formData.isNewArrival}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                  />
+                  <span className="font-medium">New Arrival</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer bg-white p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="isTopSelling"
+                    checked={formData.isTopSelling}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                  />
+                  <span className="font-medium">Top Selling</span>
+                </label>
+              </div>
             </div>
 
-            {/* Submit Buttons */}
-            <div className=" flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
-                <button
+            {/* --- Submit Buttons --- */}
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-3 text-sm sm:text-base bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors w-full sm:w-auto order-2 sm:order-1"
-                >
+                className="px-6 py-2.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm w-full sm:w-auto"
+              >
                 Cancel
-                </button>
-                <button
-                type="submit"   
-                className="px-5 py-3 text-sm sm:text-base bg-black text-white rounded-lg hover:bg-gray-800 shadow-md transition-colors w-full sm:w-auto order-1 sm:order-2"
-                >
-                Save Product
-                </button>
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 shadow-sm transition-colors w-full sm:w-auto"
+              >
+                {product ? "Update Product" : "Create Product"}
+              </button>
             </div>
-            </form>
-        </div>
-        </div>
-    );
-    }
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
-    export default ProductForm;
+export default ProductForm;

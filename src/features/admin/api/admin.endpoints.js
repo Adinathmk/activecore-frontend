@@ -12,9 +12,12 @@ export const AUTH_ADMIN_ENDPOINTS = {
 // 📦 Products Admin
 export const PRODUCT_ADMIN_ENDPOINTS = {
   LIST_CREATE: `${API_BASE}/products/admin/`,
+  SEARCH_PRODUCTS: `${API_BASE}/products/admin/search/`,
   DETAIL: (id) => `${API_BASE}/products/admin/${id}/`,
   CATEGORIES: `${API_BASE}/products/admin/categories/`,
   PRODUCT_TYPES: `${API_BASE}/products/admin/product-types/`,
+  VARIANTS_LIST_CREATE: `${API_BASE}/products/admin/variants/`,
+  VARIANTS_DETAIL: (id) => `${API_BASE}/products/admin/variants/${id}/`,
 };
 
 // 🧾 Orders Admin

@@ -16,6 +16,12 @@ export const getFeaturedProducts = async () => {
   return data.results || data;
 };
 
+/* Rate a product */
+export const rateProduct = async (slug, rating) => {
+  const { data } = await axiosInstance.post(PRODUCT_ENDPOINTS.RATE(slug), { rating });
+  return data;
+};
+
 /* ✅ NEW: Search Products */
 export const searchProducts = async (query, limit = 10) => {
   const { data } = await axiosInstance.get(PRODUCT_ENDPOINTS.SEARCH, {

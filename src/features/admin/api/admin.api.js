@@ -21,21 +21,57 @@ export const toggleBlockAdminUserApi = (id) =>
 
 // --- Product Admin APIs ---
 export const fetchAdminProductsApi = (search = '') => {
-  const url = search 
-    ? `${PRODUCT_ADMIN_ENDPOINTS.LIST_CREATE}?search=${search}`
-    : PRODUCT_ADMIN_ENDPOINTS.LIST_CREATE;
-    
-  return axiosInstance.get(url);
+  if (search) {
+    return axiosInstance.get(`${PRODUCT_ADMIN_ENDPOINTS.SEARCH_PRODUCTS}?search=${search}`);
+  }
+  return axiosInstance.get(PRODUCT_ADMIN_ENDPOINTS.LIST_CREATE);
 };
 
 export const createAdminProductApi = (data) =>
   axiosInstance.post(PRODUCT_ADMIN_ENDPOINTS.LIST_CREATE, data);
 
+export const fetchAdminProductDetailApi = (id) =>
+  axiosInstance.get(PRODUCT_ADMIN_ENDPOINTS.DETAIL(id));
+
 export const updateAdminProductApi = (id, data) =>
-  axiosInstance.put(PRODUCT_ADMIN_ENDPOINTS.DETAIL(id), data);
+  axiosInstance.patch(PRODUCT_ADMIN_ENDPOINTS.DETAIL(id), data); // Using PATCH for partial updates
 
 export const deleteAdminProductApi = (id) =>
   axiosInstance.delete(PRODUCT_ADMIN_ENDPOINTS.DETAIL(id));
+
+export const fetchAdminCategoriesApi = () =>
+  axiosInstance.get(PRODUCT_ADMIN_ENDPOINTS.CATEGORIES);
+
+export const createAdminCategoryApi = (data) =>
+  axiosInstance.post(PRODUCT_ADMIN_ENDPOINTS.CATEGORIES, data);
+
+export const fetchAdminProductTypesApi = () =>
+  axiosInstance.get(PRODUCT_ADMIN_ENDPOINTS.PRODUCT_TYPES);
+
+export const createAdminProductTypeApi = (data) =>
+  axiosInstance.post(PRODUCT_ADMIN_ENDPOINTS.PRODUCT_TYPES, data);
+
+// --- Inventory Admin APIs ---
+export const fetchAdminVariantsApi = (search = '', productId = null) => {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (productId) params.append('product_id', productId);
+  
+  const queryString = params.toString();
+  const url = queryString 
+      ? `${PRODUCT_ADMIN_ENDPOINTS.VARIANTS_LIST_CREATE}?${queryString}` 
+      : PRODUCT_ADMIN_ENDPOINTS.VARIANTS_LIST_CREATE;
+  return axiosInstance.get(url);
+};
+
+export const createAdminVariantApi = (data) =>
+  axiosInstance.post(PRODUCT_ADMIN_ENDPOINTS.VARIANTS_LIST_CREATE, data);
+
+export const updateAdminVariantApi = (id, data) =>
+  axiosInstance.patch(PRODUCT_ADMIN_ENDPOINTS.VARIANTS_DETAIL(id), data);
+
+export const deleteAdminVariantApi = (id) =>
+  axiosInstance.delete(PRODUCT_ADMIN_ENDPOINTS.VARIANTS_DETAIL(id));
 
 // --- Order Admin APIs ---
 export const fetchAdminOrdersApi = (search = '', status = 'All') => {

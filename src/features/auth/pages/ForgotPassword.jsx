@@ -9,6 +9,7 @@ const ForgotPassword = () => {
   const { forgotPassword } = useAuth();
   
   const [email, setEmail] = useState("");
+  const [channel, setChannel] = useState("email");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -21,9 +22,9 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      await forgotPassword({ email });
+      await forgotPassword({ email, channel });
       // Redirect to Reset Password and pass the email so it's pre-filled
-      navigate("/reset-password", { state: { email } });
+      navigate("/reset-password", { state: { email, channel } });
     } catch (error) {
        // Caught and toasted in useAuth
     } finally {
@@ -56,6 +57,34 @@ const ForgotPassword = () => {
               placeholder="you@example.com"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700">Send OTP via</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="channel"
+                  value="email"
+                  checked={channel === "email"}
+                  onChange={(e) => setChannel(e.target.value)}
+                  className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                />
+                <span className="text-gray-700">Email</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="channel"
+                  value="whatsapp"
+                  checked={channel === "whatsapp"}
+                  onChange={(e) => setChannel(e.target.value)}
+                  className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                />
+                <span className="text-gray-700">WhatsApp</span>
+              </label>
+            </div>
           </div>
 
           <button
