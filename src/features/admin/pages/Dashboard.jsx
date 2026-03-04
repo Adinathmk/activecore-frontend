@@ -61,9 +61,9 @@ const AdminDashboard = () => {
           fetchAdminOrdersApi()
         ]);
 
-        const Users = usersRes.data || [];
-        const Products = productsRes.data || [];
-        const Orders = ordersRes.data || [];
+        const Users = usersRes.data?.results || usersRes.data || [];
+        const Products = productsRes.data?.results || productsRes.data || [];
+        const Orders = ordersRes.data?.results || ordersRes.data || [];
 
         const TotalUsers = Users.filter(u => u.role !== 'admin' && u.role !== 'Admin').length;
         const TotalProducts = Products.length;

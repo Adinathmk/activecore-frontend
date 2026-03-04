@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Download } from "lucide-react";
 import OrderDetailsModal, { OrderStatusBadge} from '@/features/admin/components/OrderDetailsModal';
-import { fetchAdminOrdersApi, updateAdminOrderStatusApi } from '@/features/admin/api/admin.api';
+import { fetchAdminOrdersApi, updateAdminOrderStatusApi, fetchAdminOrderStatsApi } from '@/features/admin/api/admin.api';
 
 function ManageOrders() {
   const [users, setUsers] = useState([]);
@@ -11,51 +11,92 @@ function ManageOrders() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusCounts, setStatusCounts] = useState({
+    All: 0, Pending: 0, Confirmed: 0, Processing: 0,
+    Shipped: 0, Delivered: 0, Cancelled: 0, Failed: 0, Refunded: 0
+  });
 
-  // Fetch Orders
-  const fetchOrders = async () => {
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const fetchOrders = async (search = "", status = "All") => {
     try {
-      const res = await fetchAdminOrdersApi();
-      setOrders(res.data || []);
-      setFilteredOrders(res.data || []);
+      const res = await fetchAdminOrdersApi(search, status);
+      const fetchedOrders = res.data?.results || res.data || [];
+      setOrders(fetchedOrders);
+      setFilteredOrders(fetchedOrders);
     } catch (err) {
       console.error("Error fetching orders:", err);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  const fetchOrderStats = async () => {
+    try {
+      const res = await fetchAdminOrderStatsApi();
+      const statsData = res.data || [];
+      
+      const counts = {
+        All: 0, Pending: 0, Confirmed: 0, Processing: 0,
+        Shipped: 0, Delivered: 0, Cancelled: 0, Failed: 0, Refunded: 0
+      };
 
-  // Apply Filters
+      let total = 0;
+      statsData.forEach(item => {
+        const itemStatusLower = item.status?.toLowerCase();
+        let uiKey = "";
+        if (itemStatusLower === "pending") uiKey = "Pending";
+        else if (itemStatusLower === "confirmed") uiKey = "Confirmed";
+        else if (itemStatusLower === "processing") uiKey = "Processing";
+        else if (itemStatusLower === "shipped") uiKey = "Shipped";
+        else if (itemStatusLower === "delivered") uiKey = "Delivered";
+        else if (itemStatusLower === "cancelled") uiKey = "Cancelled";
+        else if (itemStatusLower === "failed") uiKey = "Failed";
+        else if (itemStatusLower === "refunded") uiKey = "Refunded";
+
+        if (uiKey) {
+          counts[uiKey] = item.count;
+          total += item.count;
+        }
+      });
+      counts.All = total;
+      setStatusCounts(counts);
+
+    } catch(err) {
+      console.error("Error fetching stats:", err);
+    }
+  }
+
   useEffect(() => {
-    let filtered = orders;
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (order) =>
-          order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.orderId.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (statusFilter !== "All") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
-    }
-    setFilteredOrders(filtered);
-  }, [searchTerm, statusFilter, orders]);
+    fetchOrders(debouncedSearch, statusFilter);
+  }, [debouncedSearch, statusFilter]);
+
+  // Fetch the total independent counts once on load, and potentially whenever a status explicitly updates completely.
+  useEffect(() => {
+    fetchOrderStats();
+  }, []);
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       // 1️⃣ Update UI instantly
+      const backendStatus = newStatus.toUpperCase();
+      const uiStatus = newStatus; // e.g. "Delivered"
+
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          // Checking both orderId and id in case the real backend returns id
-          (order.orderId === orderId || order.id === orderId) ? { ...order, status: newStatus } : order
+          (order.id === orderId || order.orderId === orderId) ? { ...order, status: backendStatus } : order
         )
       );
 
       // 2️⃣ Send PATCH request 
-      await updateAdminOrderStatusApi(orderId, { status: newStatus });
+      await updateAdminOrderStatusApi(orderId, { new_status: backendStatus });
+      fetchOrders();
+      fetchOrderStats(); // update the independent stat cards
 
       console.log("✅ Order status updated successfully!");
     } catch (error) {
@@ -71,14 +112,17 @@ function ManageOrders() {
   const exportOrders = () => {
     const csvContent = [
       ["Order ID", "Customer", "Email", "Total Amount", "Status", "Date"],
-      ...filteredOrders.map((order) => [
-        order.orderId,
-        order.user.name,
-        order.user.email,
-        `₹${order.totalAmount}`,
-        order.status,
-        new Date(order.date).toLocaleDateString(),
-      ]),
+      ...filteredOrders.map((order) => {
+        const addr = order.shipping_address || order.billing_address || {};
+        return [
+          order.id || order.orderId,
+          addr.first_name ? `${addr.first_name} ${addr.last_name || ''}` : "Unknown",
+          addr.email || "",
+          `₹${order.total_amount || order.totalAmount}`,
+          order.status,
+          new Date(order.placed_at || order.date).toLocaleDateString(),
+        ];
+      }),
     ]
       .map((row) => row.join(","))
       .join("\n");
@@ -92,14 +136,7 @@ function ManageOrders() {
     window.URL.revokeObjectURL(url);
   };
 
-  const statusCounts = {
-    All: orders.length,
-    Pending: orders.filter((o) => o.status === "Pending").length,
-    Processing: orders.filter((o) => o.status === "Processing").length,
-    Shipped: orders.filter((o) => o.status === "Shipped").length,
-    Delivered: orders.filter((o) => o.status === "Delivered").length,
-    Cancelled: orders.filter((o) => o.status === "Cancelled").length,
-  };
+  // statusCounts is now maintained by the independent stats API call
 
   return (
     <div className="p-6 space-y-6">
@@ -161,10 +198,13 @@ function ManageOrders() {
           >
             <option value="All">All Status</option>
             <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
             <option value="Processing">Processing</option>
             <option value="Shipped">Shipped</option>
             <option value="Delivered">Delivered</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Failed">Failed</option>
+            <option value="Refunded">Refunded</option>
           </select>
         </div>
       </div>
@@ -204,28 +244,28 @@ function ManageOrders() {
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.orderId} className="hover:bg-gray-50">
+                  <tr key={order.id || order.orderId} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        #{ (order.orderId || order.id || "").toString().slice(-8) }
+                        #{ (order.id || order.orderId || "").toString().slice(-8) }
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {order?.user?.name || "Unknown User"}
+                        {order.shipping_address?.first_name ? `${order.shipping_address.first_name} ${order.shipping_address.last_name || ''}` : "Unknown"}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {order?.user?.email || "No Email"}
+                        {order.shipping_address?.email || "No Email"}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(order.date || order.created_at).toLocaleDateString()}
+                      {new Date(order.placed_at || order.date || order.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      ₹{order.totalAmount || order.total_amount}
+                      ₹{order.total_amount || order.totalAmount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <OrderStatusBadge status={order.status} />
+                      <OrderStatusBadge status={order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()} />
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <button
@@ -250,11 +290,11 @@ function ManageOrders() {
       {selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
-          user={selectedOrder.user || {}}
+          user={selectedOrder.shipping_address || selectedOrder.billing_address || {}}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onUpdateStatus={(orderId, newStatus) => 
-            handleUpdateStatus(selectedOrder.orderId || selectedOrder.id, newStatus)
+            handleUpdateStatus(selectedOrder.id || selectedOrder.orderId, newStatus)
           }
         />
       )}

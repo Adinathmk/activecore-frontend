@@ -53,8 +53,8 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
             <User className="text-white" size={28} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{user.name}</h3>
-            <p className="text-sm text-gray-600">{user.role}</p>
+            <h3 className="text-lg font-bold text-gray-900">{user.first_name} {user.last_name}</h3>
+            <p className="text-sm text-gray-600 capitalize">{user.role}</p>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
             <div>
               <p className="text-xs text-gray-600">Phone</p>
               <p className="font-medium text-gray-900">
-                {user.phone || "Not provided"}
+                {user.phone_number || "Not provided"}
               </p>
             </div>
           </div>
@@ -107,7 +107,7 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <Heart className="mx-auto text-blue-600 mb-1" size={20} />
                   <p className="text-2xl font-bold text-gray-900">
-                    {user.wishlist?.length || 0}
+                    {user.wishlist_count || 0}
                   </p>
                   <p className="text-xs text-gray-600">Wishlist</p>
                 </div>
@@ -117,14 +117,14 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
                     size={20}
                   />
                   <p className="text-2xl font-bold text-gray-900">
-                    {user.cart?.length || 0}
+                    {user.cart_count || 0}
                   </p>
                   <p className="text-xs text-gray-600">Cart Items</p>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg">
                   <Package className="mx-auto text-purple-600 mb-1" size={20} />
                   <p className="text-2xl font-bold text-gray-900">
-                    {user.orders?.length || 0}
+                    {user.order_count || 0}
                   </p>
                   <p className="text-xs text-gray-600">Orders</p>
                 </div>

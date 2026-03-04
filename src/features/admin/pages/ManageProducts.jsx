@@ -12,11 +12,23 @@ function ManageProducts() {
     const[isFormOpen,setFormOpen]=useState(false)
     const[editingProduct,setEditingProduct]=useState(null)
 
-    const fetchProducts=async()=>{
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(productName);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [productName]);
+
+    const fetchProducts=async(search = '')=>{
             try{
                 setLoading(true)
-                const{data}=await fetchAdminProductsApi()
-                setProducts(data)
+                const { data } = await fetchAdminProductsApi(search);
+                setProducts(data?.results || data);
             }
            catch (e) {
                 console.error("Error fetching products:", e);
@@ -26,19 +38,11 @@ function ManageProducts() {
     }
     
     useEffect(()=>{        
-        fetchProducts()        
-    },[])
+        fetchProducts(debouncedSearch)        
+    },[debouncedSearch])
 
     useEffect(() => {
         let data = products;
-
-        // Filter by product name
-        if (productName.trim() !== "") {
-            const searchKey = productName.toLowerCase().replace(/[^a-z]/g, "");
-            data = data.filter(product =>
-            product.name.toLowerCase().replace(/[^a-z]/g, "").includes(searchKey)
-            );
-        }
 
         // Filter by category
         if (category !== 'All Categories') {
@@ -48,7 +52,7 @@ function ManageProducts() {
         }
 
         setfilteredProducts(data);
-    }, [productName, products, category]);
+    }, [products, category]);
 
     const productOnSave = async (formData) => {
         try {

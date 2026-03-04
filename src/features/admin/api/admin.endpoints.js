@@ -3,6 +3,7 @@ import { API_BASE } from "@/services/apiBase";
 // 🔐 Auth Admin
 export const AUTH_ADMIN_ENDPOINTS = {
   LIST_USERS: `${API_BASE}/auth/admin/users/`,
+  SEARCH_USERS: `${API_BASE}/auth/admin/users/search/`,
   DETAIL: (id) => `${API_BASE}/auth/admin/users/${id}/`,
   TOGGLE_BLOCK: (id) => `${API_BASE}/auth/admin/users/${id}/block/`,
   DELETE: (id) => `${API_BASE}/auth/admin/users/${id}/delete/`,
@@ -19,7 +20,8 @@ export const PRODUCT_ADMIN_ENDPOINTS = {
 // 🧾 Orders Admin
 export const ORDER_ADMIN_ENDPOINTS = {
   LIST: `${API_BASE}/orders/admin/`,
+  SEARCH_ORDERS: `${API_BASE}/orders/admin/search/`,
   DETAIL: (id) => `${API_BASE}/orders/admin/${id}/`,
   UPDATE_STATUS: (id) => `${API_BASE}/orders/admin/${id}/update-status/`,
-  STATS: `${API_BASE}/orders/admin/stats/`, // Keep your backend typo fixed here if need be. Adjusting to 'admin'. If issue persists we change it to adimn
+  STATS: `${API_BASE}/orders/adimn/stats/`, // Matching backend adimn typo
 };

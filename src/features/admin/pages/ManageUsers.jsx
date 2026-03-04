@@ -13,11 +13,20 @@ function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchUsers = async () => {
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const fetchUsers = async (search = '') => {
     try {
       setLoading(true);
-      const { data } = await fetchAdminUsersApi();
-      setUsers(data);
+      const { data } = await fetchAdminUsersApi(search);
+      setUsers(data?.results || data);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -26,22 +35,12 @@ function ManageUsers() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
 
   // ✅ Filtering logic
   useEffect(() => {
     let data = users;
-
-    // Search filter
-    if (searchTerm.trim() !== '') {
-      const searchKey = searchTerm.toLowerCase().replace(/[^a-z0-9]/g, '');
-      data = data.filter(
-        (user) =>
-          user.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(searchKey) ||
-          user.email.toLowerCase().replace(/[^a-z0-9]/g, '').includes(searchKey)
-      );
-    }
 
     // Role filter
     if (roleFilter !== 'All Roles') {
@@ -51,7 +50,7 @@ function ManageUsers() {
     }
 
     setFilteredUsers(data);
-  }, [searchTerm, users, roleFilter]);
+  }, [users, roleFilter]);
 
   // ✅ Delete user
   const handleDelete = async (id) => {
@@ -75,6 +74,7 @@ function ManageUsers() {
 
       // Update on backend. Assuming it's a POST or PATCH toggle.
       await toggleBlockAdminUserApi(id);
+      
 
       // Update locally
       setUsers((prev) =>
@@ -151,7 +151,7 @@ function ManageUsers() {
                 >
                   <option>All Roles</option>
                   <option>Admin</option>
-                  <option>User</option>
+                  <option>Customer</option>
                 </select>
               </div>
             </div>
@@ -208,7 +208,7 @@ function ManageUsers() {
                         key={user.id}
                         className="hover:bg-gray-50 transition-colors duration-150"
                       >
-                        <td className="p-4 font-medium text-gray-900">{user.name}</td>
+                        <td className="p-4 font-medium text-gray-900">{user.first_name} {user.last_name}</td>
                         <td className="p-4 text-gray-700">{user.email}</td>
                         <td className="p-4 text-gray-700">{user.role}</td>
                         <td className="p-4">
