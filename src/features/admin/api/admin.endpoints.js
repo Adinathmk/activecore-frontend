@@ -28,3 +28,8 @@ export const ORDER_ADMIN_ENDPOINTS = {
   UPDATE_STATUS: (id) => `${API_BASE}/orders/admin/${id}/update-status/`,
   STATS: `${API_BASE}/orders/adimn/stats/`, // Matching backend adimn typo
 };
+
+// 📊 Reports Admin
+export const REPORTS_ADMIN_ENDPOINTS = {
+  DASHBOARD: `${API_BASE}/reports/dashboard/`,
+};

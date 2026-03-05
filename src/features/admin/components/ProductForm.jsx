@@ -18,7 +18,7 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
     is_featured: false,
     is_active: true,
     features: [""],
-    images: [{ image_url: "", is_primary: true, is_secondary: false }],
+    images: [{ id: null, image_url: "", file: null, is_primary: true, is_secondary: false }],
   };
 
   const [formData, setFormData] = useState(defaultFormData);
@@ -58,11 +58,13 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
             : [""],
           images: detail.images?.length
             ? detail.images.map((img) => ({
-                image_url: img.image_url,
+                id: img.id,
+                image_url: img.image,
+                file: null, // New file to override
                 is_primary: img.is_primary,
                 is_secondary: img.is_secondary,
               }))
-            : [{ image_url: "", is_primary: true, is_secondary: false }],
+            : [{ id: null, image_url: "", file: null, is_primary: true, is_secondary: false }],
 
         });
       } else {
@@ -117,19 +119,32 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
   const handleImageChange = (index, field, value) => {
     let updated = [...formData.images];
     
-    // Enforce exactly one primary image
     if (field === "is_primary" && value === true) {
       updated = updated.map((img, i) => ({
         ...img,
         is_primary: i === index,
-        is_secondary: i === index ? false : img.is_secondary, // Can't be primary and secondary
+        is_secondary: i === index ? false : img.is_secondary,
+      }));
+    } else if (field === "is_secondary" && value === true) {
+      updated = updated.map((img, i) => ({
+        ...img,
+        is_secondary: i === index,
       }));
     } else {
       updated[index][field] = value;
     }
     setFormData({ ...formData, images: updated });
   };
-  const addImage = () => setFormData({ ...formData, images: [...formData.images, { image_url: "", is_primary: false, is_secondary: false }] });
+  const handleImageFileChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      let updated = [...formData.images];
+      updated[index] = { ...updated[index], file: file, image_url: url };
+      setFormData({ ...formData, images: updated });
+    }
+  };
+  const addImage = () => setFormData({ ...formData, images: [...formData.images, { id: null, image_url: "", file: null, is_primary: false, is_secondary: false }] });
   const deleteImage = (index) => {
     if (formData.images.length === 1) return;
     setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) });
@@ -143,23 +158,59 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
         return;
     }
 
-    // Clean payload
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      category: parseInt(formData.category, 10),
-      product_type: parseInt(formData.product_type, 10),
-      is_new_arrival: formData.isNewArrival,
-      is_top_selling: formData.isTopSelling,
-      is_featured: formData.is_featured,
-      is_active: formData.is_active,
-      features: formData.features.filter(f => f.trim() !== ""),
-      images: formData.images.filter(img => img.image_url.trim() !== ""),
-    };
+    const hasEmptyImageBlocks = formData.images.some(img => !img.file && !img.id);
+    if (hasEmptyImageBlocks) {
+      toast.error("Please upload a file for all image slots, or remove the empty image slots using the 'X' button.");
+      return;
+    }
+
+    const validImages = formData.images.filter(img => img.file || img.id);
+    const hasPrimary = validImages.some(img => img.is_primary);
+    if (!hasPrimary) {
+      toast.error("Exactly one image must be selected as Primary.");
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append("name", formData.name);
+    payload.append("description", formData.description);
+    payload.append("category", formData.category);
+    payload.append("product_type", formData.product_type);
+    payload.append("is_new_arrival", formData.isNewArrival);
+    payload.append("is_top_selling", formData.isTopSelling);
+    payload.append("is_featured", formData.is_featured);
+    payload.append("is_active", formData.is_active);
+
+    const validFeatures = formData.features.filter(f => f.trim() !== "");
+    payload.append("features", JSON.stringify(validFeatures));
+
+    let imgIndex = 0;
+    formData.images.forEach((img) => {
+      // Only include images that either have a new file to upload or an existing ID
+      if (img.file || img.id) {
+        if (img.id) {
+            payload.append(`images[${imgIndex}][id]`, img.id);
+        }
+        if (img.file) {
+            payload.append(`images[${imgIndex}][image]`, img.file);
+        }
+        payload.append(`images[${imgIndex}][is_primary]`, img.is_primary);
+        payload.append(`images[${imgIndex}][is_secondary]`, img.is_secondary);
+        imgIndex++;
+      }
+    });
 
     if (product) {
-      onSave({ ...payload, id: product.id });
+      console.log("--- Edit Payload Debug ---");
+      for (let [key, value] of payload.entries()) {
+        console.log(key, value);
+      }
+      onSave(payload);
     } else {
+      console.log("--- Create Payload Debug ---");
+      for (let [key, value] of payload.entries()) {
+        console.log(key, value);
+      }
       onSave(payload);
     }
   };
@@ -270,15 +321,19 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
               <div className="space-y-3">
                 {formData.images.map((img, i) => (
                   <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
-                    <div className="flex-1 w-full">
+                    <div className="flex-1 w-full flex flex-col sm:flex-row gap-3 items-center">
                       <input
-                        type="url"
-                        value={img.image_url}
-                        onChange={(e) => handleImageChange(i, "image_url", e.target.value)}
-                        placeholder="https://example.com/image.jpg"
-                        className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-300"
-                        required={i === 0}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageFileChange(i, e)}
+                        className="w-full text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                        required={i === 0 && !img.image_url}
                       />
+                      {img.image_url && (
+                        <div className="h-12 w-12 relative rounded-md overflow-hidden border border-gray-200 shrink-0 bg-gray-50">
+                          <img src={img.image_url} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0 px-1">
                       <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">

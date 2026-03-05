@@ -9,7 +9,6 @@ import { parseApiError } from '@/features/admin/utils/errorHandler';
 
 function ManageProducts() {
     const[products,setProducts]=useState([])
-    const[filteredProducts,setfilteredProducts]=useState([])
     const[productName,setproductName]=useState('')
     const[category,setCategory]=useState('All Categories')
     const[loading, setLoading] = useState(true)
@@ -47,18 +46,10 @@ function ManageProducts() {
         fetchProducts(debouncedSearch)        
     },[debouncedSearch])
 
-    useEffect(() => {
-        let data = products;
-
-        // Filter by category
-        if (category !== 'All Categories') {
-            data = data.filter(
-            product => product.category.toLowerCase() === category.toLowerCase()
-            );
-        }
-
-        setfilteredProducts(data);
-    }, [products, category]);
+    const filteredProducts = products.filter((product) => {
+        if (category === "All Categories") return true;
+        return product.category.toLowerCase() === category.toLowerCase();
+    });
 
     const productOnSave = async (formData) => {
         try {
@@ -86,12 +77,20 @@ function ManageProducts() {
         setFormOpen(false);
         setEditingProduct(null)
     };
-    const deleteProduct = async (id) => {
+   const deleteProduct = async (id) => {
         if (!window.confirm("Delete this product? This cannot be undone.")) return;
+
         try {
             await deleteAdminProductApi(id);
+
+            // update UI instantly
             setProducts((prev) => prev.filter((p) => p.id !== id));
+
             toast.success("Product deleted.");
+
+            // re-fetch from backend to stay in sync
+            fetchProducts(debouncedSearch);
+
         } catch (error) {
             console.error("Error deleting product:", error);
             toast.error(parseApiError(error, "Failed to delete product."));

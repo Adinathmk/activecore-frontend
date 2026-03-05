@@ -3,6 +3,7 @@ import {
   AUTH_ADMIN_ENDPOINTS,
   PRODUCT_ADMIN_ENDPOINTS,
   ORDER_ADMIN_ENDPOINTS,
+  REPORTS_ADMIN_ENDPOINTS,
 } from "./admin.endpoints";
 
 // --- Auth Admin APIs ---
@@ -89,5 +90,7 @@ export const fetchAdminOrdersApi = (search = '', status = 'All') => {
 export const updateAdminOrderStatusApi = (id, data) =>
   axiosInstance.patch(ORDER_ADMIN_ENDPOINTS.UPDATE_STATUS(id), data);
 
-export const fetchAdminOrderStatsApi = () =>
-  axiosInstance.get(ORDER_ADMIN_ENDPOINTS.STATS);
+
+// --- Reports Admin APIs ---
+export const fetchAdminDashboardStatsApi = () => 
+  axiosInstance.get(REPORTS_ADMIN_ENDPOINTS.DASHBOARD);

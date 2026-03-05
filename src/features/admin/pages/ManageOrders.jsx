@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Download } from "lucide-react";
 import OrderDetailsModal, { OrderStatusBadge} from '@/features/admin/components/OrderDetailsModal';
-import { fetchAdminOrdersApi, updateAdminOrderStatusApi, fetchAdminOrderStatsApi } from '@/features/admin/api/admin.api';
+import { fetchAdminOrdersApi, updateAdminOrderStatusApi } from '@/features/admin/api/admin.api';
 
 function ManageOrders() {
   const [users, setUsers] = useState([]);
@@ -38,17 +38,17 @@ function ManageOrders() {
 
   const fetchOrderStats = async () => {
     try {
-      const res = await fetchAdminOrderStatsApi();
-      const statsData = res.data || [];
+      // In absence of order stats endpoint, calculating from ALL orders 
+      const res = await fetchAdminOrdersApi("", "All");
+      const allOrders = res.data?.results || res.data || [];
       
       const counts = {
-        All: 0, Pending: 0, Confirmed: 0, Processing: 0,
+        All: allOrders.length, Pending: 0, Confirmed: 0, Processing: 0,
         Shipped: 0, Delivered: 0, Cancelled: 0, Failed: 0, Refunded: 0
       };
 
-      let total = 0;
-      statsData.forEach(item => {
-        const itemStatusLower = item.status?.toLowerCase();
+      allOrders.forEach(order => {
+        const itemStatusLower = order.status?.toLowerCase();
         let uiKey = "";
         if (itemStatusLower === "pending") uiKey = "Pending";
         else if (itemStatusLower === "confirmed") uiKey = "Confirmed";
@@ -60,11 +60,9 @@ function ManageOrders() {
         else if (itemStatusLower === "refunded") uiKey = "Refunded";
 
         if (uiKey) {
-          counts[uiKey] = item.count;
-          total += item.count;
+          counts[uiKey]++;
         }
       });
-      counts.All = total;
       setStatusCounts(counts);
 
     } catch(err) {
