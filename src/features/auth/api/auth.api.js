@@ -40,3 +40,7 @@ export const forgotPasswordRequest = (data) => {
 export const resetPasswordRequest = (data) => {
   return axios.post(AUTH_ENDPOINTS.RESET_PASSWORD, data);
 };
+
+export const googleLoginRequest = (data) => {
+  return axios.post(AUTH_ENDPOINTS.GOOGLE_LOGIN, data);
+};

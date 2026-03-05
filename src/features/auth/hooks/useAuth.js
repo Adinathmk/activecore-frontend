@@ -5,14 +5,17 @@ import {
   sendOtpRequest,
   verifyOtpRequest,
   forgotPasswordRequest,
-  resetPasswordRequest
+  resetPasswordRequest,
+  googleLoginRequest 
 } from "@/features/auth/api/auth.api";
 import {
   loginUser as loginUserAction,
   registerUser as registerUserAction,
   logoutUser as logoutUserAction,
-  updateProfile as updateProfileThunk
+  updateProfile as updateProfileThunk,
+  loadUser ,
 } from "../authSlice";
+
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -106,6 +109,15 @@ export const useAuth = () => {
     }
   };
 
+  const googleLogin = async (token) => {
+    const res = await googleLoginRequest({ token });
+
+    const result = await dispatch(loadUser()).unwrap();
+
+
+    return result;
+  };
+
   return {
     currentUser: user,
     accessToken,
@@ -122,6 +134,7 @@ export const useAuth = () => {
     verifyOtp,
     forgotPassword,
     resetPassword,
+    googleLogin,
     // Aliases for convenience
     login: loginUser,
     register: registerUser,

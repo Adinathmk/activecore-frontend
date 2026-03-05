@@ -10,4 +10,5 @@ export const AUTH_ENDPOINTS = {
   VERIFY_OTP: `${API_BASE}/auth/verify-otp/`,
   FORGOT_PASSWORD: `${API_BASE}/auth/forgot-password/`,
   RESET_PASSWORD: `${API_BASE}/auth/reset-password/`,
+  GOOGLE_LOGIN: `${API_BASE}/auth/google/`,
 };

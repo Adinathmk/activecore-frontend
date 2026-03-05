@@ -134,7 +134,6 @@ const StatCard = ({ cfg, value, index }) => {
         <p className="text-[2rem] font-black leading-none tracking-tight text-gray-800">
           <AnimatedCounter to={value} prefix={cfg.prefix} />
         </p>
-        <Sparkline data={sparkSeeds[cfg.key]} color={a.line} />
       </div>
 
       {/* Bottom gradient line */}

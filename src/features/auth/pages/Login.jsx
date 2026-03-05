@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import banner from "@/assets/image.avif";
+import { GoogleLogin } from "@react-oauth/google";
+
 
 const SignInPage = () => {
   const navigate = useNavigate();
-  const { loginUser, loadingLogin, sendOtp } = useAuth();
+  const { loginUser, loadingLogin, sendOtp , googleLogin} = useAuth();
 
   // ✅ Get user from Redux
   const { user } = useSelector((state) => state.auth);
@@ -23,6 +25,8 @@ const SignInPage = () => {
   // ==============================
   // Redirect After Login (SAFE)
   // ==============================
+
+
   useEffect(() => {
     if (user) {
       const role = user.role?.toLowerCase();
@@ -94,6 +98,23 @@ const SignInPage = () => {
 
         navigate("/verify-otp", { state: { email: formData.email } });
       }
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await googleLogin(credentialResponse.credential);
+
+      const role = res.user?.role?.toLowerCase();
+
+      if (role === "admin") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+
+    } catch (error) {
+      console.error("Google login failed", error);
     }
   };
 
@@ -180,6 +201,19 @@ const SignInPage = () => {
                   : "Sign In"}
               </button>
             </form>
+
+            <div className="flex items-center my-6">
+  <div className="flex-grow border-t"></div>
+  <span className="mx-4 text-gray-400 text-sm">OR</span>
+  <div className="flex-grow border-t"></div>
+</div>
+
+<div className="flex justify-center">
+  <GoogleLogin
+    onSuccess={handleGoogleSuccess}
+    onError={() => console.log("Google Login Failed")}
+  />
+</div>
 
             <div className="text-center mt-6">
               <p className="text-gray-600">
