@@ -10,15 +10,18 @@ import { motion } from 'framer-motion';
 import TestimonialSlider from '@/shared/components/TestimonialSlider';
 import BannerSlider from '@/shared/components/BannerSlider';
 import { getFeaturedProducts } from '@/features/products/api/product.api';
+import { FeaturedProductsSkeleton } from '@/shared/components/Skeleton';
 
 
 function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate=useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
+      setFeaturedLoading(true);
       try {
         const data = await getFeaturedProducts();
 
@@ -36,6 +39,8 @@ function Home() {
         setFeaturedProducts(formatted);
       } catch (error) {
         console.error('Failed to fetch featured products:', error);
+      } finally {
+        setFeaturedLoading(false);
       }
     };
 
@@ -197,6 +202,9 @@ function Home() {
             </p>
           </div>
 
+          {featuredLoading ? (
+            <FeaturedProductsSkeleton />
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {featuredProducts.map((product) => (
               <div key={product.id} onClick={()=>{navigate(`/product/${product.slug}`)}} className="group cursor-pointer" >
@@ -218,6 +226,7 @@ function Home() {
   
             ))}
           </div>
+          )}
 
           <div className="text-center mt-12">
             <button className="border border-gray-900 text-gray-900 px-8 py-3 rounded-full font-semibold hover:bg-gray-900 hover:text-white transition-colors">

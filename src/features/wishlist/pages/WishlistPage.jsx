@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { WishlistSkeleton } from "@/shared/components/Skeleton";
 
 /* ─── Tiny inline styles for things Tailwind can't do ─── */
 const premiumStyles = `
@@ -88,11 +89,7 @@ export default function WishlistPage() {
 };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 rounded-full border border-gray-200 border-t-gray-900 animate-spin" />
-      </div>
-    );
+    return <WishlistSkeleton />;
   }
 
   if (wishlist.length === 0) {

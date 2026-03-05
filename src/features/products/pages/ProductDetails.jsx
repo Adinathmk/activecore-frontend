@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import CheckoutModal from '@/shared/components/BuyingModal';
 import { getProductById } from '@/features/products/api/product.api';
 import ProductReviewSection from '@/features/products/components/ProductReviewSection';
+import { ProductDetailsSkeleton } from '@/shared/components/Skeleton';
 
 const ProductDetails = () => {
   const navigate = useNavigate();
@@ -110,11 +111,7 @@ const ProductDetails = () => {
   const maxQuantity = selectedVariant?.available_stock ?? 0;
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-b-2 border-black rounded-full" />
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   // ── Not found guard ───────────────────────────────────────────────────────

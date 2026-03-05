@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ShoppingBag, X, Package, Calendar, CreditCard, MapPin } from 'lucide-react';
 import axiosInstance from '@/services/axiosInstance';
 import { getOrdersAPI } from '../api/order.api';
+import { OrdersSkeleton } from '@/shared/components/Skeleton';
 
 function Orders() {
     const [isViewAll, setViewAll] = useState(false);
@@ -10,6 +11,7 @@ function Orders() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { currentUser } = useAuth();
     const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
 
     const getStatusColor = (status) => {
   switch (status) {
@@ -40,12 +42,14 @@ function Orders() {
 
     useEffect(() => {
     const fetchUserOrders = async () => {
+        setOrdersLoading(true);
         try {
             const data = await getOrdersAPI();
             setOrders(data);
         } catch (err) {
             console.error('Error fetching orders:', err);
-            toast.error('Failed to load orders data');
+        } finally {
+            setOrdersLoading(false);
         }
     };
 
@@ -67,6 +71,11 @@ function Orders() {
                         Recent Orders
                     </h2>
                 </div>
+
+                {ordersLoading ? (
+                    <OrdersSkeleton />
+                ) : (
+                <>
 
                 {isViewAll && <>
                     <div className="space-y-4">
@@ -163,6 +172,8 @@ function Orders() {
                         onClick={() => setViewAll(true)}>
                         View All Orders
                     </button></>}
+            </>
+                )}
             </div>
 
             {/* Order Details Modal */}

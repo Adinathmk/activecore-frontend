@@ -7,6 +7,7 @@ import ProductFilter from "@/features/products/components/ProductFilter";
 import ProductGrid from "@/features/products/components/ProductGrid";
 
 import { getProducts } from "../api/product.api";
+import { ProductsPageSkeleton } from "@/shared/components/Skeleton";
 
 export default function Products() {
   const { category } = useParams();
@@ -94,11 +95,7 @@ export default function Products() {
   const activeFilterCount = [selectedSize, sortBy, minPrice, maxPrice].filter(Boolean).length;
 
   if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-b-2 border-black rounded-full" />
-      </div>
-    );
+    return <ProductsPageSkeleton />;
 
   if (error)
     return (

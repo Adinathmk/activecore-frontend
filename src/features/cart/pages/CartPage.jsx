@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import CheckoutModal from "@/shared/components/BuyingModal";
 import { toast } from "react-toastify";
+import { CartSkeleton } from "@/shared/components/Skeleton";
 
 const premiumStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap');
@@ -38,11 +39,7 @@ export default function CartPage() {
 
   // Loading state
   if (loading || !summary) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 rounded-full border border-gray-200 border-t-gray-900 animate-spin" />
-      </div>
-    );
+    return <CartSkeleton />;
   }
   const handleCheckout = async () => {
     const result = await validateCartBeforeCheckout();
