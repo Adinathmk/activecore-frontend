@@ -11,6 +11,7 @@ import TestimonialSlider from '@/shared/components/TestimonialSlider';
 import BannerSlider from '@/shared/components/BannerSlider';
 import { getFeaturedProducts } from '@/features/products/api/product.api';
 import { FeaturedProductsSkeleton } from '@/shared/components/Skeleton';
+import GymLoader from '@/shared/components/GymLoader';
 
 
 function Home() {
@@ -18,6 +19,12 @@ function Home() {
   const navigate=useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [pageReady, setPageReady] = useState(false);
+
+  useEffect(() => {
+    // Let the page mount, then mark ready after a tick
+    setPageReady(true);
+  }, []);
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -82,6 +89,7 @@ function Home() {
   }, []);
 
   return (
+    <GymLoader loading={!pageReady} minMs={1000}>
     <div className="min-h-screen bg-white">
           
 
@@ -359,6 +367,7 @@ function Home() {
 
       
     </div>
+    </GymLoader>
   );
 }
 

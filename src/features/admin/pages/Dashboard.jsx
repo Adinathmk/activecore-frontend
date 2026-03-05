@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform, animate, AnimatePresence } from '
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { fetchAdminDashboardStatsApi } from '@/features/admin/api/admin.api';
+import GymLoader from '@/shared/components/GymLoader';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -502,19 +503,7 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="flex flex-col items-center gap-3">
-        <motion.div
-          className="w-10 h-10 rounded-full"
-          style={{ border: '3px solid #e0e7ff', borderTop: '3px solid #6366f1' }}
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
-        />
-        <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Loading</p>
-      </div>
-    </div>
-  );
+  if (loading) return <GymLoader />;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] px-4 py-8 md:px-8 lg:px-10"

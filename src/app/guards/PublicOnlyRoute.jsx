@@ -1,11 +1,12 @@
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
+import GymLoader from "@/shared/components/GymLoader";
 
 function PublicOnlyRoute() {
   const { user, loadingUser } = useSelector((state) => state.auth);
 
   if (loadingUser) {
-    return <div>Loading...</div>;
+    return <GymLoader />;
   }
 
   if (user) {
