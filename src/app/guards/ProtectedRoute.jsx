@@ -1,13 +1,8 @@
-import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
-import GymLoader from "@/shared/components/GymLoader";
 
 function ProtectedRoute() {
-  const { user, loadingUser } = useSelector((state) => state.auth);
-
-  if (loadingUser) {
-    return <GymLoader />;
-  }
+  const userString = localStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : null;
 
   if (!user) {
     return <Navigate to="/login" replace />;

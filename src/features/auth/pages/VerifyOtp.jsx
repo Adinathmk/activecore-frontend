@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MailCheck } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 const VerifyOtp = () => {
   const { verifyOtp, sendOtp } = useAuth();

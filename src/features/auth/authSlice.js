@@ -79,11 +79,23 @@ export const loadUser = createAsyncThunk(
 // ==============================
 
 const initialToken = localStorage.getItem("access");
+// Handle "undefined" string stored in localStorage
+const validInitialToken = initialToken && initialToken !== "undefined" ? initialToken : null;
+
+let initialUser = null;
+try {
+  const userStr = localStorage.getItem("user");
+  if (userStr && userStr !== "undefined") {
+    initialUser = JSON.parse(userStr);
+  }
+} catch (e) {
+  console.error("Failed to parse user from local storage", e);
+}
 
 const initialState = {
-  user: null,
-  accessToken: initialToken || null,
-  isAuthenticated: false,
+  user: initialUser,
+  accessToken: validInitialToken,
+  isAuthenticated: !!validInitialToken || !!initialUser,
 
   loadingLogin: false,
   loadingRegister: false,
@@ -105,6 +117,7 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.isAuthenticated = false;
       localStorage.removeItem("access");
+      localStorage.removeItem("user");
     },
   },
   extraReducers: (builder) => {
@@ -113,6 +126,9 @@ const authSlice = createSlice({
       // ================= UPDATE PROFILE =================
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.user = action.payload;
+        if (action.payload) {
+          localStorage.setItem("user", JSON.stringify(action.payload));
+        }
       })
 
       // ================= LOGIN =================
@@ -123,11 +139,19 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loadingLogin = false;
 
-        state.accessToken = action.payload.access;
+        state.accessToken = action.payload.access || null;
         state.user = action.payload.user;
         state.isAuthenticated = true;
 
-        localStorage.setItem("access", action.payload.access);
+        if (action.payload.access) {
+          localStorage.setItem("access", action.payload.access);
+        } else {
+          localStorage.removeItem("access");
+        }
+
+        if (action.payload.user) {
+          localStorage.setItem("user", JSON.stringify(action.payload.user));
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loadingLogin = false;
@@ -153,6 +177,7 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.isAuthenticated = false;
         localStorage.removeItem("access");
+        localStorage.removeItem("user");
       })
 
       // ================= LOAD USER =================
@@ -163,11 +188,15 @@ const authSlice = createSlice({
         state.loadingUser = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        if (action.payload) {
+          localStorage.setItem("user", JSON.stringify(action.payload));
+        }
       })
-      .addCase(loadUser.rejected, (state) => {
+      .addCase(loadUser.rejected, (state, action) => {
         state.loadingUser = false;
-        state.user = null;
-        state.isAuthenticated = false;
+        // We do not clear user or isAuthenticated here. 
+        // If the token is truly invalid and refresh fails, the axios interceptor will dispatch `clearAuth()`.
+        // If it's just a network error, we want to maintain the cached local storage state.
       });
   },
 });

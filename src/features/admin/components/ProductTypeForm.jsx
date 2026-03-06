@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 function ProductTypeForm({ isFormOpen, onSave, onClose }) {
   const [formData, setFormData] = useState({ name: "", slug: "", is_active: true });

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Star, Send, LogIn } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { rateProduct } from '@/features/products/api/product.api';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import { useNavigate } from 'react-router-dom';
 
 const ProductReviewSection = ({ slug, avgRating, ratingCount, onRefresh }) => {

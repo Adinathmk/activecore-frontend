@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { createPaymentIntent } from "../api/order.payment.api";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 const StripeCheckout = ({ orderId, onSuccess }) => {
   const stripe = useStripe();

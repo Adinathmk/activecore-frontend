@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { checkoutOrderAPI } from '@/features/orders/api/order.api';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import { useNavigate } from 'react-router-dom';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────

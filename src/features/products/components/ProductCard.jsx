@@ -10,7 +10,7 @@ import {
 import { useCart } from "@/features/cart/hooks/useCart";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();

@@ -4,7 +4,7 @@ import {
   ShoppingBag, HelpCircle, Package, Clock, CheckCircle, XCircle
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import { Link } from 'react-router-dom';
 import { getAccountOverviewAPI } from '@/features/orders/api/order.api';
 

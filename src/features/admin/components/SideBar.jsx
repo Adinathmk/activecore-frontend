@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Users,
   Box,
+  Bell,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -61,6 +62,7 @@ function SideBar() {
     { id: "inventory", label: "Inventory", icon: Box ,url:'/manageInventory'},
     { id: "orders", label: "Orders", icon: ShoppingCart ,url:'/manageOrders'},
     { id: "customers", label: "Customers", icon: Users ,url:'/manageUsers'},
+    { id: "notifications", label: "Notifications", icon: Bell ,url:'/manageNotifications'},
   ];
 
   return (

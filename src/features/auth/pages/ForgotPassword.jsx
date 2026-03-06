@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { KeyRound } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { X, XCircle, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { fetchAdminCategoriesApi, fetchAdminProductTypesApi, fetchAdminProductDetailApi } from "@/features/admin/api/admin.api";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 function ProductForm({ isFormOpen, onSave, product, onClose }) {
   const [loading, setLoading] = useState(false);

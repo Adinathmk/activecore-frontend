@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Edit, Trash2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import { parseApiError } from '@/features/admin/utils/errorHandler';
 import { 
     fetchAdminVariantsApi, 

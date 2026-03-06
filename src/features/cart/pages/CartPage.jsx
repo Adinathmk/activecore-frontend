@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import CheckoutModal from "@/shared/components/BuyingModal";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 import { CartSkeleton } from "@/shared/components/Skeleton";
 
 const premiumStyles = `

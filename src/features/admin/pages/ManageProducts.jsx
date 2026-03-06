@@ -4,7 +4,7 @@ import ProductForm from '@/features/admin/components/ProductForm';
 import CategoryForm from '@/features/admin/components/CategoryForm';
 import ProductTypeForm from '@/features/admin/components/ProductTypeForm';
 import { fetchAdminProductsApi, createAdminProductApi, updateAdminProductApi, deleteAdminProductApi, createAdminCategoryApi, createAdminProductTypeApi } from '@/features/admin/api/admin.api';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import { parseApiError } from '@/features/admin/utils/errorHandler';
 
 function ManageProducts() {

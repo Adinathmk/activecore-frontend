@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 import getErrorMessage from "@/shared/utils/getErrorMessage";
 import {
   sendOtpRequest,

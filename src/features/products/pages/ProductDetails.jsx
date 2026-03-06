@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
 import { useCart } from '@/features/cart/hooks/useCart';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import CheckoutModal from '@/shared/components/BuyingModal';
 import { getProductById } from '@/features/products/api/product.api';
 import ProductReviewSection from '@/features/products/components/ProductReviewSection';

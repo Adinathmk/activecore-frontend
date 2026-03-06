@@ -16,6 +16,7 @@ import UserProfile from "@/features/auth/pages/Profile";
 import VerifyOtp from "@/features/auth/pages/VerifyOtp";
 import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 import ResetPassword from "@/features/auth/pages/ResetPassword";
+import NotificationPage from "@/features/notifications/pages/NotificationPage";
 
 // Products
 import Products from "@/features/products/pages/Products";
@@ -38,6 +39,7 @@ import ManageProducts from "@/features/admin/pages/ManageProducts";
 import ManageOrders from "@/features/admin/pages/ManageOrders";
 import ManageUsers from "@/features/admin/pages/ManageUsers";
 import ManageInventory from "@/features/admin/pages/ManageInventory";
+import ManageNotifications from "@/features/admin/pages/ManageNotifications";
 
 const AppRoutes = () => {
   return (
@@ -66,6 +68,7 @@ const AppRoutes = () => {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/payment/:orderId" element={<PaymentPage />} />
         </Route>
       </Route>
@@ -82,6 +85,7 @@ const AppRoutes = () => {
           <Route path="/manageInventory" element={<ManageInventory />} />
           <Route path="/manageOrders" element={<ManageOrders />} />
           <Route path="/manageUsers" element={<ManageUsers />} />
+          <Route path="/manageNotifications" element={<ManageNotifications />} />
         </Route>
       </Route>
 

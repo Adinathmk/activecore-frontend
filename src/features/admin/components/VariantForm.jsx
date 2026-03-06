@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 import { fetchAdminProductsApi } from "@/features/admin/api/admin.api";
 
 function VariantForm({ isFormOpen, onSave, variant, onClose }) {

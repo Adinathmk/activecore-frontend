@@ -4,8 +4,9 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from '@/features/cart/hooks/useCart';
 import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { toast } from 'react-toastify';
+import { toast } from "@/components/ui/sonner";
 import SearchProductModal from './SearchProductModal';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { cart } = useCart();
@@ -44,7 +45,6 @@ export default function Navbar() {
   const handleSignOut = () => {
     logoutUser();
     setIsProfileModalOpen(false);
-    toast.success('Signed out successfully!');
   };
 
   const handleProfileClick = () => {
@@ -128,11 +128,15 @@ export default function Navbar() {
             </div>
 
             {/* Rest of the code remains exactly the same */}
+            {/* Notifications */}
+            <NotificationBell />
+
             {/* Wishlist */}
             <button onClick={() => navigate('/wishlist')} className="cursor-pointer text-gray-600 hover:text-purple-600 transition-all duration-300 p-2 hover:bg-purple-50 rounded-lg relative group">
               <Heart size={22} className="group-hover:scale-110 transition-transform" />
               <span className="absolute -top-1 -right-1 bg-gradient-to-br from-pink-500 to-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg shadow-pink-500/40 ring-2 ring-white">{wishlistCount}</span>
             </button>
+
 
             {/* Cart */}
             <button onClick={() => navigate('/cart')} className="cursor-pointer text-gray-600 hover:text-purple-600 transition-all duration-300 p-2 hover:bg-purple-50 rounded-lg relative group">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { LockKeyhole, Eye, EyeOff } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/sonner";
 
 const ResetPassword = () => {
   const { resetPassword, forgotPassword } = useAuth();
