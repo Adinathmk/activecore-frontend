@@ -7,7 +7,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import CountUp from '@/shared/utils/CountUp';
 import ScrollVelocity from '@/shared/utils/scrollVelocity';
-import sampleimage1 from '@/assets/testimonial-1.jpeg';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { getFeaturedProducts } from '@/features/products/api/product.api';
 import { FeaturedProductsSkeleton } from '@/shared/components/Skeleton';
@@ -208,9 +207,9 @@ export default function Home() {
   }, []);
 
   const testimonials = [
-    { name: 'Sarah Johnson',   role: 'Premium Member',  text: 'The quality and service exceeded my expectations. Fast shipping and exceptional products!',         avatar: sampleimage1 },
-    { name: 'Michael Chen',    role: 'Loyal Customer',   text: 'Outstanding customer service and the products are even better in person. Highly recommended!',    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
-    { name: 'Emily Rodriguez', role: 'First-time Buyer', text: 'The attention to detail in every product is remarkable. Will definitely shop here again.',        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100' },
+    { name: 'Adinath',   role: 'Premium Member',  text: 'The quality and service exceeded my expectations. Fast shipping and exceptional products!',         avatar: 'https://res.cloudinary.com/diyesfihd/image/upload/v1772802379/WhatsApp_Image_2026-02-28_at_2.17.42_PM_v0qxxo.jpg' },
+    { name: 'Midhun',    role: 'Loyal Customer',   text: 'Outstanding customer service and the products are even better in person. Highly recommended!',    avatar: 'https://res.cloudinary.com/diyesfihd/image/upload/v1772802379/WhatsApp_Image_2025-12-22_at_1.53.50_PM_i8nrbm.jpg' },
+    { name: 'Rizwan', role: 'First-time Buyer', text: 'The attention to detail in every product is remarkable. Will definitely shop here again.',        avatar: 'https://res.cloudinary.com/diyesfihd/image/upload/v1772802402/WhatsApp_Image_2025-12-22_at_1.53.51_PM_tgrc7a.jpg' },
   ];
   const nextSlide = () => setCurrentSlide(p => (p + 1) % testimonials.length);
   const prevSlide = () => setCurrentSlide(p => (p - 1 + testimonials.length) % testimonials.length);

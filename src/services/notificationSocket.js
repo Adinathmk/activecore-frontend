@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 let socket = null;
 let reconnectTimeout = null;
+
 const RECONNECT_DELAY = 3000; // 3 seconds
 
 export const connectNotificationSocket = (dispatch) => {
@@ -11,20 +12,15 @@ export const connectNotificationSocket = (dispatch) => {
     return;
   }
 
-  // Use environment variable or fallback to localhost
-  // Use environment variable or fallback to localhost
-  const baseUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/notifications/";
-  
-  // Get token from localStorage
-  const token = localStorage.getItem("access");
-  const wsUrl = (token && token !== "undefined") ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+  const wsUrl =
+    import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/notifications/";
 
   try {
     socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       console.log("WebSocket connected to notifications");
-      // Clear timeout if successfully connected
+
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
@@ -34,9 +30,9 @@ export const connectNotificationSocket = (dispatch) => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
         dispatch(addNotification(data));
 
-        // Show a real-time toast
         if (data.message) {
           toast.info(data.message, {
             description: "New Notification Received",
@@ -52,11 +48,11 @@ export const connectNotificationSocket = (dispatch) => {
     };
 
     socket.onclose = () => {
-      console.log("WebSocket disconnected. Attempting to reconnect...");
+      console.log("WebSocket disconnected. Attempting reconnect...");
       scheduleReconnect(dispatch);
     };
   } catch (error) {
-    console.error("Failed to establish WebSocket connection:", error);
+    console.error("Failed to connect WebSocket:", error);
     scheduleReconnect(dispatch);
   }
 };
@@ -75,8 +71,9 @@ export const disconnectNotificationSocket = () => {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
   }
+
   if (socket) {
-    socket.onclose = null; // Prevent auto-reconnect trigger on manual disconnect
+    socket.onclose = null; // prevent reconnect on manual close
     socket.close();
     socket = null;
   }
