@@ -11,7 +11,7 @@ import { connectNotificationSocket, disconnectNotificationSocket } from "@/servi
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector(state => state.auth);
+  const { isAuthenticated ,user, loadingUser} = useSelector(state => state.auth);
 
   useEffect(() => {
     dispatch(loadUser());
@@ -19,18 +19,16 @@ function App() {
 
   // Handle WebSocket connection based on authentication
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("App: User authenticated, connecting WebSocket...");
-      connectNotificationSocket(dispatch);
-    } else {
-      console.log("App: User not authenticated, disconnecting WebSocket...");
-      disconnectNotificationSocket();
-    }
+  if (loadingUser) return;
 
-    return () => {
-      disconnectNotificationSocket();
-    };
-  }, [isAuthenticated, dispatch]);
+  if (user) {
+    connectNotificationSocket(dispatch);
+  } else {
+    disconnectNotificationSocket();
+  }
+
+  return () => disconnectNotificationSocket();
+}, [user, loadingUser, dispatch]);
 
   // Sync wishlist, cart & notifications with authentication state
   useEffect(() => {
