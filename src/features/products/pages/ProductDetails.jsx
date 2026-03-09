@@ -253,7 +253,7 @@ const displayDiscount =
           <div className="space-y-4">
 
             {/* Main image */}
-            <div className="relative aspect-[4/5] overflow-hidden bg-gray-50 rounded-2xl">
+            <div className="relative aspect-[5/6] overflow-hidden bg-gray-50 rounded-2xl">
               {images.length > 0 ? (
                 <img
                   src={images[activeImage]}
