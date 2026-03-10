@@ -100,7 +100,7 @@ axiosInstance.interceptors.response.use(
       processQueue(refreshError);
 
       // Clear redux auth state
-      store.dispatch(clearAuth());
+      // store.dispatch(clearAuth());
 
       // Redirect only once
       if (window.location.pathname !== "/login") {
