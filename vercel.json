@@ -5,6 +5,10 @@
       "destination": "https://activecore.duckdns.org/api/$1"
     },
     {
+      "source": "/ws/(.*)",
+      "destination": "https://activecore.duckdns.org/ws/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
