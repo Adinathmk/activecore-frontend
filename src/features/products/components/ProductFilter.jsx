@@ -1,5 +1,5 @@
-// src/features/products/components/ProductFilter.jsx
 import React from "react";
+import { X } from "lucide-react";
 
 // FIX: ProductFilter is now a fully controlled component.
 // All state lives in Products.jsx and is passed down as props.
@@ -22,6 +22,7 @@ export default function ProductFilter({
   minPrice,     setMinPrice,
   maxPrice,     setMaxPrice,
   sortBy,       setSortBy,
+  onClose,
 }) {
   // No local state, no useEffect — all values come from props.
 
@@ -43,7 +44,7 @@ export default function ProductFilter({
   };
 
   return (
-    <div className="w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-7 space-y-9">
+    <div className="w-full lg:w-80 bg-white lg:rounded-2xl lg:shadow-xl lg:border border-gray-100 p-5 lg:p-7 space-y-9">
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -51,12 +52,19 @@ export default function ProductFilter({
           <h2 className="text-xl font-medium text-gray-900">Filters</h2>
           <p className="text-xs text-gray-400 mt-0.5">Refine your selection</p>
         </div>
-        <button
-          onClick={handleReset}
-          className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-all duration-200 px-2 py-1 rounded-md hover:bg-gray-50"
-        >
-          Reset
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReset}
+            className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-all duration-200 px-2 py-1 rounded-md hover:bg-gray-50"
+          >
+            Reset
+          </button>
+          {onClose && (
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-1 lg:hidden">
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sort */}

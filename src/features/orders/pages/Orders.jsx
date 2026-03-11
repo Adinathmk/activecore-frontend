@@ -64,8 +64,8 @@ function Orders() {
 }, [currentUser?.id]);
     return (
         <>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:mx-30 md:my-10 mx-10 my-5">
-                <div className="flex items-center gap-2 mb-6 justify-center">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mx-4 sm:mx-10 md:mx-30 my-5 md:my-10">
+                <div className="flex items-center gap-2 mb-4 sm:mb-6 justify-center">
                     <ShoppingBag size={20} className="text-gray-700" />
                     <h2 className="text-xl font-semibold text-gray-900">
                         Recent Orders
@@ -84,22 +84,22 @@ function Orders() {
                                 <div
                                     key={order.id}
                                     onClick={() => handleOrderClick(order)}
-                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer gap-4 sm:gap-0"
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
                                             <ShoppingBag size={18} className="text-blue-600" />
                                         </div>
-                                        <div>
-                                            <h3 className="font-medium text-gray-900">
+                                        <div className="min-w-0">
+                                            <h3 className="font-medium text-gray-900 truncate">
                                                 {order.id}
                                             </h3>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-600 truncate">
                                                 Placed on {new Date(order.placed_at).toISOString().split("T")[0]}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-end border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 gap-2 sm:gap-0">
                                         <p className="font-semibold text-gray-900">
                                             ₹{order.total_amount}
                                         </p>
@@ -132,22 +132,22 @@ function Orders() {
                                 <div
                                     key={order.id}
                                     onClick={() => handleOrderClick(order)}
-                                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer gap-4 sm:gap-0"
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
                                             <ShoppingBag size={18} className="text-blue-600" />
                                         </div>
-                                        <div>
-                                            <h3 className="font-medium text-gray-900">
+                                        <div className="min-w-0">
+                                            <h3 className="font-medium text-gray-900 truncate">
                                                 {order.id}
                                             </h3>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-600 truncate">
                                                 Placed on {new Date(order.placed_at).toISOString().split("T")[0]}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-end border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 gap-2 sm:gap-0">
                                         <p className="font-semibold text-gray-900">
                                             ₹{order.total_amount}
                                         </p>
@@ -202,9 +202,9 @@ function Orders() {
                         </div>
 
                         {/* Modal Content */}
-                        <div className="p-6 space-y-6">
+                        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             {/* Order Status & Date */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                     <Calendar size={18} className="text-gray-600" />
                                     <div>
@@ -253,18 +253,20 @@ function Orders() {
                                 </h3>
                                 <div className="space-y-4">
                                     {selectedOrder.items.map((item, index) => (
-                                        <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
-                                            <img
-                                                src={item.primary_image_url || '/placeholder-image.jpg'}
-                                                alt={item.product_name}
-                                                className="w-16 h-16 object-cover rounded-lg"
-                                            />
-                                            <div className="flex-1">
-                                                <h4 className="font-medium text-gray-900">{item.product_name}</h4>
-                                                <p className="text-sm text-gray-600">Size: {item.variant_size}</p>
-                                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                        <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                                            <div className="flex items-center gap-4">
+                                                <img
+                                                    src={item.primary_image_url || '/placeholder-image.jpg'}
+                                                    alt={item.product_name}
+                                                    className="w-16 h-16 object-cover rounded-lg shrink-0"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-medium text-gray-900 truncate">{item.product_name}</h4>
+                                                    <p className="text-sm text-gray-600">Size: {item.variant_size}</p>
+                                                    <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="flex justify-between sm:block border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
                                                 <p className="font-semibold text-gray-900">₹{item.total_price}</p>
                                                 <p className="text-sm text-gray-600">₹{item.final_unit_price} × {item.quantity}</p>
                                             </div>

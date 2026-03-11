@@ -5,6 +5,7 @@ import { fetchAdminProductsApi } from "@/features/admin/api/admin.api";
 
 function VariantForm({ isFormOpen, onSave, variant, onClose }) {
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([]);
   
   const defaultFormData = {
@@ -63,7 +64,7 @@ function VariantForm({ isFormOpen, onSave, variant, onClose }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.product) {
       toast.error("Please select a product.");
@@ -79,10 +80,15 @@ function VariantForm({ isFormOpen, onSave, variant, onClose }) {
       is_active: formData.is_active,
     };
 
-    if (variant) {
-      onSave({ ...payload, id: variant.id });
-    } else {
-      onSave(payload);
+    setIsSubmitting(true);
+    try {
+      if (variant) {
+        await onSave({ ...payload, id: variant.id });
+      } else {
+        await onSave(payload);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -127,7 +133,7 @@ function VariantForm({ isFormOpen, onSave, variant, onClose }) {
                  </select>
                </div>
      
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
                    <label className="text-sm font-medium text-gray-700 block mb-1.5">Size *</label>
                    <select
@@ -207,12 +213,20 @@ function VariantForm({ isFormOpen, onSave, variant, onClose }) {
                  >
                    Cancel
                  </button>
-                 <button
-                   type="submit"
-                   className="px-5 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
-                 >
-                   {variant ? "Save Changes" : "Create Variant"}
-                 </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        {variant ? "Saving..." : "Creating..."}
+                      </>
+                    ) : (
+                      variant ? "Save Changes" : "Create Variant"
+                    )}
+                  </button>
                </div>
              </form>
         )}

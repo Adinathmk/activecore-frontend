@@ -154,7 +154,7 @@ export default function WishlistPage() {
               )}
 
               {/* Layout toggle */}
-              <div className="flex border border-gray-200 bg-white">
+              <div className="hidden sm:flex border border-gray-200 bg-white">
                 <button
                   onClick={() => setLayout("grid")}
                   className={`p-2.5 transition-colors ${

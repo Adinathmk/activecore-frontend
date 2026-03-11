@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Bell, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 // Removed unnecessary clearNotifications import
 
 export default function NotificationBell() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -23,6 +24,13 @@ export default function NotificationBell() {
   }, []);
 
   const handleToggle = () => {
+    // If mobile view (less than sm breakpoint which is 640px in Tailwind), navigate directly
+    if (window.innerWidth < 640) {
+      setIsOpen(false); // Ensure it's closed
+      navigate('/notifications');
+      return;
+    }
+
     setIsOpen(!isOpen);
     if (!isOpen && unreadCount > 0) {
       // Just opening might not mark them as read depending on UX choice.
@@ -46,7 +54,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+        <div className="absolute -right-4 sm:right-0 top-full mt-2 hidden sm:block w-[calc(100vw-32px)] sm:w-80 md:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-in slide-in-from-top-2 duration-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
           </div>

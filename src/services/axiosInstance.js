@@ -1,5 +1,6 @@
 import axios from "axios";
 import store from "@/app/store";
+import { API_BASE } from "./apiBase";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -54,17 +55,13 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await refreshClient.post("api/auth/refresh/");  
+      await refreshClient.post(`${API_BASE}/auth/refresh/`);  
 
       processQueue();
 
       return axiosInstance(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError);
-
-      // if (window.location.pathname !== "/login") {
-      //   window.location.replace("/login");
-      // }
 
       return Promise.reject(refreshError);
     } finally {

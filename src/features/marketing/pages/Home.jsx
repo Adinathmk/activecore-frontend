@@ -91,8 +91,8 @@ const GLOBAL_STYLE = `
   height: 90vh;
 }
   @media (max-width: 768px) {
-    .home-body .hero-grid { grid-template-columns: 1fr; }
-    .home-body .hero-img-panel { min-height: 70vw; order: -1; }
+    .home-body .hero-grid { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+    .home-body .hero-img-panel { min-height: 50vh; order: -1; }
   }
 
   .home-body .hero-img-panel { position: relative; overflow: hidden; }

@@ -108,9 +108,16 @@ const ManageNotifications = () => {
                                 <button
                                     type="submit"
                                     disabled={sendingGlobal || !globalMessage.trim()}
-                                    className="mt-6 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-200 disabled:opacity-50 disabled:shadow-none"
+                                    className="mt-6 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-200 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
                                 >
-                                    {sendingGlobal ? "Processing..." : <><Send className="w-4 h-4" /> Dispatch Broadcast</>}
+                                    {sendingGlobal ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <><Send className="w-4 h-4" /> Dispatch Broadcast</>
+                                    )}
                                 </button>
                             </form>
                         </div>
@@ -205,9 +212,16 @@ const ManageNotifications = () => {
                                 <button
                                     type="submit"
                                     disabled={sendingTargeted || !targetedMessage.trim() || !selectedUser}
-                                    className="mt-6 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:shadow-none"
+                                    className="mt-6 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
                                 >
-                                    {sendingTargeted ? "Sending..." : <><Bell className="w-4 h-4" /> Send Notification</>}
+                                    {sendingTargeted ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        <><Bell className="w-4 h-4" /> Send Notification</>
+                                    )}
                                 </button>
                             </form>
                         </div>

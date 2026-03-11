@@ -321,7 +321,7 @@ const displayDiscount =
 
             {/* Thumbnails */}
             {hasMultiple && (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
                 {images.map((img, i) => (
                   <button
                     key={i}
@@ -556,7 +556,7 @@ const displayDiscount =
             </div>
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
               {[
                 { Icon: Truck,     title: 'Free Shipping', sub: 'On orders over ₹500' },
                 { Icon: RotateCcw, title: 'Easy Returns',   sub: '30-day return policy' },

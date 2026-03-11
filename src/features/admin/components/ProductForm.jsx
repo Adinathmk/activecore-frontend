@@ -5,6 +5,7 @@ import { toast } from "@/components/ui/sonner";
 
 function ProductForm({ isFormOpen, onSave, product, onClose }) {
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
 
@@ -151,7 +152,7 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
   };
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.category || !formData.product_type) {
         toast.error("Category and Product Type are required.");
@@ -200,18 +201,23 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
       }
     });
 
-    if (product) {
-      console.log("--- Edit Payload Debug ---");
-      for (let [key, value] of payload.entries()) {
-        console.log(key, value);
+    setIsSubmitting(true);
+    try {
+      if (product) {
+        console.log("--- Edit Payload Debug ---");
+        for (let [key, value] of payload.entries()) {
+          console.log(key, value);
+        }
+        await onSave(payload);
+      } else {
+        console.log("--- Create Payload Debug ---");
+        for (let [key, value] of payload.entries()) {
+          console.log(key, value);
+        }
+        await onSave(payload);
       }
-      onSave(payload);
-    } else {
-      console.log("--- Create Payload Debug ---");
-      for (let [key, value] of payload.entries()) {
-        console.log(key, value);
-      }
-      onSave(payload);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -464,9 +470,17 @@ function ProductForm({ isFormOpen, onSave, product, onClose }) {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 shadow-sm transition-colors w-full sm:w-auto"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 shadow-sm transition-colors w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {product ? "Update Product" : "Create Product"}
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    {product ? "Updating..." : "Creating..."}
+                  </>
+                ) : (
+                  product ? "Update Product" : "Create Product"
+                )}
               </button>
             </div>
           </form>

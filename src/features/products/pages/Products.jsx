@@ -255,11 +255,7 @@ export default function Products() {
       {/* Mobile Filter Drawer */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div onClick={() => setIsFilterOpen(false)} className="absolute inset-0 bg-black bg-opacity-50" />
-          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white p-4 overflow-y-auto">
-            <div className="flex justify-end mb-2">
-              <button onClick={() => setIsFilterOpen(false)}><X size={24} /></button>
-            </div>
+          <div className="absolute inset-0 bg-white overflow-y-auto">
             <ProductFilter
               onApply={handleApply}
               category={category}
@@ -267,6 +263,7 @@ export default function Products() {
               minPrice={minPrice}          setMinPrice={setMinPrice}
               maxPrice={maxPrice}          setMaxPrice={setMaxPrice}
               sortBy={sortBy}              setSortBy={setSortBy}
+              onClose={() => setIsFilterOpen(false)}
             />
           </div>
         </div>

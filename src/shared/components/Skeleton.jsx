@@ -90,7 +90,7 @@ export function FilterSkeleton() {
       {/* Size */}
       <div className="space-y-3">
         <Skeleton className="h-4 w-8" rounded="rounded" />
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-9" rounded="rounded-lg" />
           ))}
@@ -160,7 +160,7 @@ export function ProductDetailsSkeleton() {
           {/* Left — Image gallery */}
           <div className="space-y-4">
             <Skeleton className="w-full aspect-[4/5]" rounded="rounded-2xl" />
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
               {[...Array(4)].map((_, i) => (
                 <Skeleton key={i} className="aspect-square" rounded="rounded-xl" />
               ))}
@@ -224,7 +224,7 @@ export function ProductDetailsSkeleton() {
             </div>
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 p-3">
                   <Skeleton className="w-10 h-10" rounded="rounded-lg" />

@@ -8,9 +8,10 @@ import {
   Heart,
   Package,
 } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
+  const [isBlocking, setIsBlocking] = useState(false);
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -103,7 +104,7 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
               <h4 className="font-semibold text-gray-900 mb-4">
                 User Statistics
               </h4>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <Heart className="mx-auto text-blue-600 mb-1" size={20} />
                   <p className="text-2xl font-bold text-gray-900">
@@ -144,16 +145,29 @@ function UserDetailsModal({ user, isOpen, onClose, onBlockUser }) {
           </button>
           {user.role !== "Admin" && (
             <button
-              onClick={() => {
-                onBlockUser(user.id);
+              onClick={async () => {
+                setIsBlocking(true);
+                try {
+                  await onBlockUser(user.id);
+                } finally {
+                  setIsBlocking(false);
+                }
               }}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-white ${
+              disabled={isBlocking}
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-white flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
                 user.status === "Blocked"
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-orange-500 hover:bg-orange-600"
               }`}
             >
-              {user.status === "Blocked" ? "Unblock User" : "Block User"}
+              {isBlocking ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  {user.status === "Blocked" ? "Unblocking..." : "Blocking..."}
+                </>
+              ) : (
+                user.status === "Blocked" ? "Unblock User" : "Block User"
+              )}
             </button>
           )}
         </div>

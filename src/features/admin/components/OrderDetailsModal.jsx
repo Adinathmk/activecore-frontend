@@ -46,6 +46,7 @@ function OrderDetailsModal({ order, user, isOpen, onClose, onUpdateStatus }) {
   const formatStatus = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setSelectedStatus(formatStatus(order?.status));
@@ -64,12 +65,17 @@ function OrderDetailsModal({ order, user, isOpen, onClose, onUpdateStatus }) {
 
   if (!isOpen || !order || !user) return null;
 
- const handleStatusUpdate = () => {
+  const handleStatusUpdate = async () => {
     // UpperCase the selectedStatus for the backend comparison/submission
     const backendStatus = selectedStatus.toUpperCase();
     const orderStatusStr = order.status.toUpperCase();
     if (backendStatus !== orderStatusStr) {
-      onUpdateStatus(order.id || order.orderId, selectedStatus);      
+      setIsUpdating(true);
+      try {
+        await onUpdateStatus(order.id || order.orderId, selectedStatus);      
+      } finally {
+        setIsUpdating(false);
+      }
     }
     onClose();
   };
@@ -349,10 +355,17 @@ function OrderDetailsModal({ order, user, isOpen, onClose, onUpdateStatus }) {
                   </select>
                   <button
                     onClick={handleStatusUpdate}
-                    disabled={selectedStatus.toUpperCase() === order.status.toUpperCase()}
-                    className="px-5 py-2.5 bg-black text-white text-sm sm:text-base rounded-lg hover:bg-gray-800 shadow-md transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
+                    disabled={selectedStatus.toUpperCase() === order.status.toUpperCase() || isUpdating}
+                    className="px-5 py-2.5 bg-black text-white text-sm sm:text-base rounded-lg hover:bg-gray-800 shadow-md transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none flex items-center gap-2"
                   >
-                    Update
+                    {isUpdating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      "Update"
+                    )}
                   </button>
                 </div>
               </div>

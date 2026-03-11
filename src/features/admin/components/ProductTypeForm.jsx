@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/sonner";
 
 function ProductTypeForm({ isFormOpen, onSave, onClose }) {
   const [formData, setFormData] = useState({ name: "", slug: "", is_active: true });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isFormOpen) {
@@ -35,14 +36,19 @@ function ProductTypeForm({ isFormOpen, onSave, onClose }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.slug.trim()) {
       toast.error("Name and slug are required.");
       return;
     }
-    onSave(formData);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSave(formData);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isFormOpen) return null;
@@ -107,9 +113,17 @@ function ProductTypeForm({ isFormOpen, onSave, onClose }) {
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Create
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Creating...
+                </>
+              ) : (
+                "Create"
+              )}
             </button>
           </div>
         </form>

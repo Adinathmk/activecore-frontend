@@ -1,5 +1,6 @@
 import { Search, Heart, ShoppingCart, User, Menu, X, LogOut, Package, User as UserIcon, LogIn } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { searchProducts } from '@/features/products/api/product.api';
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from '@/features/cart/hooks/useCart';
 import { useWishlist } from '@/features/wishlist/hooks/useWishlist';
@@ -13,34 +14,35 @@ export default function Navbar() {
   const { wishlistCount } = useWishlist();
   const { currentUser, logoutUser } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // desktop search
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // mobile search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const profileModalRef = useRef(null);
-  const searchModalRef = useRef(null); // Add this ref for search modal
+  const searchModalRef = useRef(null);
   const navigate = useNavigate();
 
   const activeClass = "text-purple-600 font-medium";
   const inactiveClass = "text-gray-700 font-medium";
 
-  // Close modals when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      // Close profile modal
-      if (profileModalRef.current && !profileModalRef.current.contains(event.target)) {
-        setIsProfileModalOpen(false);
-      }
-      
-      // Close search modal (desktop)
-      if (searchModalRef.current && !searchModalRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
-        setSearchValue('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+ useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (profileModalRef.current && !profileModalRef.current.contains(event.target)) {
+      setIsProfileModalOpen(false);
+    }
+
+    // Check if click is inside searchModalRef OR inside the portal modal (data attribute)
+    const clickedInsideSearch = searchModalRef.current?.contains(event.target);
+    const clickedInsidePortal = event.target.closest('[data-search-portal]');
+    
+    if (!clickedInsideSearch && !clickedInsidePortal) {
+      setIsSearchOpen(false);
+      setSearchValue('');
+    }
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   const handleSignOut = () => {
     logoutUser();
@@ -64,7 +66,6 @@ export default function Navbar() {
 
   const handleLogin = () => navigate('/login');
 
-  // User display functions
   const getUserDisplayName = () => {
     if (!currentUser) return 'User';
     const name = `${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim();
@@ -99,16 +100,15 @@ export default function Navbar() {
           </div>
 
           {/* Right - Desktop Icons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
 
             {/* Desktop Search */}
-            <div className="hidden lg:block relative" ref={searchModalRef}> {/* Add ref here */}
+            <div className="hidden lg:block relative" ref={searchModalRef}>
               <div className={`flex items-center bg-gray-50 border border-gray-200 rounded-xl pl-3 pr-2 py-2 overflow-hidden transition-all duration-300 ease-in-out ${isSearchOpen ? 'w-64 shadow-md' : 'w-10 hover:bg-gray-100'}`}>
                 <Search
-
                   className="text-gray-500 flex-shrink-0 cursor-pointer transition-transform duration-300"
                   size={15}
-                  onClick={() => setIsSearchOpen(true)}                 
+                  onClick={() => setIsSearchOpen(true)}
                 />
                 <input
                   type="text"
@@ -119,24 +119,29 @@ export default function Navbar() {
                   autoFocus={isSearchOpen}
                 />
                 {isSearchOpen && (
-                  <button onClick={() => {setIsSearchOpen(false); setSearchValue('');}} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full flex-shrink-0">
+                  <button onClick={() => { setIsSearchOpen(false); setSearchValue(''); }} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full flex-shrink-0">
                     <X size={18} />
                   </button>
                 )}
-                {isSearchOpen && searchValue && <SearchProductModal value={searchValue}  setIsSearchOpen={setIsSearchOpen}/>}
               </div>
+              {/* Portal-based modal — escapes navbar stacking context */}
+              {isSearchOpen && searchValue && (
+                <SearchProductModal
+                  value={searchValue}
+                  setIsSearchOpen={setIsSearchOpen}
+                  anchorRef={searchModalRef}
+                />
+              )}
             </div>
 
-            {/* Rest of the code remains exactly the same */}
             {/* Notifications */}
-            <NotificationBell />
+            {currentUser && <NotificationBell />}
 
             {/* Wishlist */}
             <button onClick={() => navigate('/wishlist')} className="cursor-pointer text-gray-600 hover:text-purple-600 transition-all duration-300 p-2 hover:bg-purple-50 rounded-lg relative group">
               <Heart size={22} className="group-hover:scale-110 transition-transform" />
               <span className="absolute -top-1 -right-1 bg-gradient-to-br from-pink-500 to-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg shadow-pink-500/40 ring-2 ring-white">{wishlistCount}</span>
             </button>
-
 
             {/* Cart */}
             <button onClick={() => navigate('/cart')} className="cursor-pointer text-gray-600 hover:text-purple-600 transition-all duration-300 p-2 hover:bg-purple-50 rounded-lg relative group">
@@ -145,7 +150,7 @@ export default function Navbar() {
             </button>
 
             {/* Profile/Login */}
-            <div className="relative" ref={profileModalRef}>
+            <div className="relative hidden sm:block" ref={profileModalRef}>
               {currentUser ? (
                 <>
                   <button onClick={handleProfileClick} className="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-all duration-300 px-3 py-2 hover:bg-purple-50 rounded-lg group">
@@ -154,7 +159,7 @@ export default function Navbar() {
                   </button>
 
                   {isProfileModalOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-3 z-50 animate-in slide-in-from-top-2 duration-200">
+                    <div className="absolute -right-4 sm:right-0 top-full mt-2 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-3 z-50 animate-in slide-in-from-top-2 duration-200">
                       <div className="px-4 py-3 border-b border-gray-100 flex items-center space-x-3">
                         {currentUser?.profile_image ? (
                           <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-100">
@@ -201,7 +206,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu - Everything remains exactly the same */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="lg:hidden fixed inset-0 bg-white z-50 animate-in slide-in-from-right duration-300 overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -212,9 +217,8 @@ export default function Navbar() {
           </div>
 
           <div className="p-6 pb-32 space-y-8">
-
             {/* Mobile Search */}
-            <div className="relative">
+            <div>
               <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-4">
                 <Search className="text-gray-500 flex-shrink-0" size={20} />
                 <input
@@ -225,16 +229,21 @@ export default function Navbar() {
                   onFocus={() => setIsMobileSearchOpen(true)}
                   className="bg-transparent text-sm text-gray-700 placeholder-gray-500 focus:outline-none ml-3 w-full"
                 />
-                {isMobileSearchOpen && (
-                  <button onClick={() => setIsMobileSearchOpen(false)} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full">
+                {searchValue && (
+                  <button onClick={() => { setSearchValue(''); setIsMobileSearchOpen(false); }} className="ml-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full">
                     <X size={18} />
                   </button>
                 )}
               </div>
               {isMobileSearchOpen && searchValue && (
-                <div className="absolute top-full left-0 w-full z-50 mt-2">
-                  <SearchProductModal value={searchValue} setIsSearchOpen={setIsMobileSearchOpen}/>
-                </div>
+                <MobileSearchResults
+                  value={searchValue}
+                  onSelect={() => {
+                    setIsMenuOpen(false);
+                    setIsMobileSearchOpen(false);
+                    setSearchValue('');
+                  }}
+                />
               )}
             </div>
 
@@ -269,6 +278,9 @@ export default function Navbar() {
                   <button onClick={() => { setIsMenuOpen(false); navigate('/profile'); }} className="w-full flex items-center space-x-3 px-5 py-4 rounded-2xl text-base font-medium text-gray-700 shadow-sm border border-gray-100 hover:text-purple-600 hover:border-purple-200">
                     <UserIcon size={20} /> <span>Profile</span>
                   </button>
+                  <button onClick={() => { setIsMenuOpen(false); navigate('/orders'); }} className="w-full flex items-center space-x-3 px-5 py-4 rounded-2xl text-base font-medium text-gray-700 shadow-sm border border-gray-100 hover:text-purple-600 hover:border-purple-200">
+                    <Package size={20} /> <span>Orders</span>
+                  </button>
                   <button onClick={() => { setIsMenuOpen(false); handleSignOut(); }} className="w-full flex items-center space-x-3 px-5 py-4 rounded-2xl text-base font-medium text-red-600 shadow-sm border border-gray-100 hover:bg-red-50 hover:border-red-200">
                     <LogOut size={20} /> <span>Sign Out</span>
                   </button>
@@ -283,5 +295,83 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  );
+}
+
+/* ── Inline mobile search results ── */
+function MobileSearchResults({ value, onSelect }) {
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!value.trim()) { setProducts([]); return; }
+    const delay = setTimeout(async () => {
+      try {
+        setIsLoading(true);
+        const data = await searchProducts(value, 10);
+        setProducts(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [value]);
+
+  const handleProductClick = (slug) => {
+    // Navigate first — before any state changes unmount this component
+    navigate(`/product/${slug}`);
+    // Then clean up the menu state after a tiny delay
+    setTimeout(() => {
+      onSelect();
+    }, 50);
+  };
+
+  if (isLoading) return (
+    <div className="mt-2 space-y-2">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-100">
+          <div className="w-12 h-12 bg-gray-200 rounded animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (!products.length) return (
+    <p className="mt-3 text-center text-sm text-gray-400">No products found</p>
+  );
+
+  return (
+    <div className="mt-2 space-y-2">
+      {products.map((product) => (
+        <div
+          key={product.id}
+          onClick={() => handleProductClick(product.slug)}
+          className="flex items-center space-x-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
+        >
+          <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
+            {product.primary_image
+              ? <img src={product.primary_image} alt={product.name} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No img</div>}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-gray-900 truncate">{product.name}</p>
+            <p className="text-xs text-gray-500">{product.product_type}</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="font-semibold text-gray-900">₹{product.price}</p>
+            <p className={`text-xs ${product.in_stock ? 'text-green-600' : 'text-red-500'}`}>
+              {product.in_stock ? 'In Stock' : 'Sold Out'}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
