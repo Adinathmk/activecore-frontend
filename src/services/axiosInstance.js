@@ -54,7 +54,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await refreshClient.post("/auth/refresh/");  
+      await refreshClient.post("api/auth/refresh/");  
 
       processQueue();
 
