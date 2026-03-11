@@ -1,7 +1,7 @@
 import axios from "axios";
 import store from "@/app/store";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "/api";   // IMPORTANT
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -31,9 +31,7 @@ axiosInstance.interceptors.response.use(
 
     if (!originalRequest) return Promise.reject(error);
 
-    if (originalRequest._retry) {
-      return Promise.reject(error);
-    }
+    if (originalRequest._retry) return Promise.reject(error);
 
     if (originalRequest.url?.includes("/refresh")) {
       return Promise.reject(error);
@@ -56,7 +54,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await refreshClient.post("/api/auth/refresh/");
+      await refreshClient.post("/auth/refresh/");  
 
       processQueue();
 
