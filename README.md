@@ -228,25 +228,6 @@ Three route guards protect navigation:
 ### Real-Time Notifications
 A custom `notificationSocket.js` service manages the WebSocket lifecycle (connect, reconnect, message dispatch) and integrates with the Redux notification slice to update the UI live.
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes with a clear message (`git commit -m 'feat: add your feature'`)
-4. Push to your branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-Please ensure your code passes linting (`npm run lint`) before submitting.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
