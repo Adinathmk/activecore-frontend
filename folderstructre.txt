@@ -1,0 +1,136 @@
+activecore-frontend/
+├── README.md
+├── components.json
+├── eslint.config.js
+├── index.html
+├── jsconfig.json
+├── package.json
+├── vercel.json
+├── vite.config.js
+└── src/
+    ├── App.jsx
+    ├── index.css
+    ├── main.jsx
+    ├── app/
+    │   ├── routes.jsx
+    │   ├── store.js
+    │   ├── guards/
+    │   │   ├── ProtectedRoute.jsx
+    │   │   ├── PublicOnlyRoute.jsx
+    │   │   └── RoleProtectedRoute.jsx
+    │   └── layouts/
+    │       ├── AdminLayout.jsx
+    │       └── MainLayout.jsx
+    ├── components/
+    │   └── ui/
+    │       └── sonner.jsx
+    ├── features/
+    │   ├── admin/
+    │   │   ├── api/
+    │   │   │   ├── admin.api.js
+    │   │   │   └── admin.endpoints.js
+    │   │   ├── components/
+    │   │   │   ├── CategoryForm.jsx
+    │   │   │   ├── OrderDetailsModal.jsx
+    │   │   │   ├── ProductForm.jsx
+    │   │   │   ├── ProductTypeForm.jsx
+    │   │   │   ├── SideBar.jsx
+    │   │   │   ├── UserDetailsModal.jsx
+    │   │   │   └── VariantForm.jsx
+    │   │   ├── pages/
+    │   │   │   ├── Dashboard.jsx
+    │   │   │   ├── ManageInventory.jsx
+    │   │   │   ├── ManageNotifications.jsx
+    │   │   │   ├── ManageOrders.jsx
+    │   │   │   ├── ManageProducts.jsx
+    │   │   │   └── ManageUsers.jsx
+    │   │   └── utils/
+    │   │       └── errorHandler.js
+    │   ├── auth/
+    │   │   ├── authSlice.js
+    │   │   ├── api/
+    │   │   │   ├── auth.api.js
+    │   │   │   └── auth.endpoints.js
+    │   │   ├── hooks/
+    │   │   │   └── useAuth.js
+    │   │   └── pages/
+    │   │       ├── ForgotPassword.jsx
+    │   │       ├── Login.jsx
+    │   │       ├── Profile.jsx
+    │   │       ├── ResetPassword.jsx
+    │   │       ├── SignUp.jsx
+    │   │       └── VerifyOtp.jsx
+    │   ├── cart/
+    │   │   ├── cartSlice.js
+    │   │   ├── api/
+    │   │   │   ├── cart.api.js
+    │   │   │   └── cart.endpoints.js
+    │   │   ├── hooks/
+    │   │   │   └── useCart.js
+    │   │   └── pages/
+    │   │       └── CartPage.jsx
+    │   ├── marketing/
+    │   │   └── pages/
+    │   │       ├── About.jsx
+    │   │       ├── ContactPage.jsx
+    │   │       └── Home.jsx
+    │   ├── notifications/
+    │   │   ├── notificationSlice.js
+    │   │   ├── api/
+    │   │   │   └── notification.api.js
+    │   │   └── pages/
+    │   │       └── NotificationPage.jsx
+    │   ├── orders/
+    │   │   ├── api/
+    │   │   │   ├── order.api.js
+    │   │   │   ├── order.payment.api.js
+    │   │   │   └── orders.endpoints.js
+    │   │   ├── components/
+    │   │   │   └── StripeCheckout.jsx
+    │   │   └── pages/
+    │   │       ├── Orders.jsx
+    │   │       └── Payment.jsx
+    │   ├── products/
+    │   │   ├── api/
+    │   │   │   ├── product.api.js
+    │   │   │   └── product.endpoints.js
+    │   │   ├── components/
+    │   │   │   ├── ProductCard.jsx
+    │   │   │   ├── ProductFilter.jsx
+    │   │   │   ├── ProductGrid.jsx
+    │   │   │   └── ProductReviewSection.jsx
+    │   │   └── pages/
+    │   │       ├── ProductDetails.jsx
+    │   │       └── Products.jsx
+    │   └── wishlist/
+    │       ├── wishlistSlice.js
+    │       ├── api/
+    │       │   ├── wishlist.api.js
+    │       │   └── wishlist.endpoints.js
+    │       ├── hooks/
+    │       │   └── useWishlist.js
+    │       └── pages/
+    │           └── WishlistPage.jsx
+    ├── lib/
+    │   └── utils.js
+    ├── services/
+    │   ├── apiBase.js
+    │   ├── axiosInstance.js
+    │   ├── notificationSocket.js
+    │   └── stripe.js
+    └── shared/
+        ├── components/
+        │   ├── BannerSlider.jsx
+        │   ├── BuyingModal.jsx
+        │   ├── Footer.jsx
+        │   ├── GymLoader.jsx
+        │   ├── Navbar.jsx
+        │   ├── NotificationBell.jsx
+        │   ├── ScrollToTop.jsx
+        │   ├── SearchProductModal.jsx
+        │   ├── Skeleton.jsx
+        │   └── TestimonialSlider.jsx
+        └── utils/
+            ├── CountUp.jsx
+            ├── getErrorMessage.js
+            └── scrollVelocity.jsx
