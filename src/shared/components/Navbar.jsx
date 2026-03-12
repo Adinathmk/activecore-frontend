@@ -25,24 +25,23 @@ export default function Navbar() {
   const activeClass = "text-purple-600 font-medium";
   const inactiveClass = "text-gray-700 font-medium";
 
- useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (profileModalRef.current && !profileModalRef.current.contains(event.target)) {
-      setIsProfileModalOpen(false);
-    }
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileModalRef.current && !profileModalRef.current.contains(event.target)) {
+        setIsProfileModalOpen(false);
+      }
 
-    // Check if click is inside searchModalRef OR inside the portal modal (data attribute)
-    const clickedInsideSearch = searchModalRef.current?.contains(event.target);
-    const clickedInsidePortal = event.target.closest('[data-search-portal]');
-    
-    if (!clickedInsideSearch && !clickedInsidePortal) {
-      setIsSearchOpen(false);
-      setSearchValue('');
-    }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+      const clickedInsideSearch = searchModalRef.current?.contains(event.target);
+      const clickedInsidePortal = event.target.closest('[data-search-portal]');
+
+      if (!clickedInsideSearch && !clickedInsidePortal) {
+        setIsSearchOpen(false);
+        setSearchValue('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSignOut = () => {
     logoutUser();
@@ -78,6 +77,16 @@ export default function Navbar() {
     const name = getUserDisplayName();
     if (name === 'User') return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // ── FIX: close mobile menu and navigate to product ──────────────────────────
+  const handleMobileProductSelect = (slug) => {
+    if (!slug) return;
+    // Close overlay first, then navigate on next tick so overlay is unmounted
+    setIsMenuOpen(false);
+    setIsMobileSearchOpen(false);
+    setSearchValue('');
+    setTimeout(() => navigate(`/product/${slug}`), 0);
   };
 
   return (
@@ -124,7 +133,6 @@ export default function Navbar() {
                   </button>
                 )}
               </div>
-              {/* Portal-based modal — escapes navbar stacking context */}
               {isSearchOpen && searchValue && (
                 <SearchProductModal
                   value={searchValue}
@@ -206,9 +214,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — FIX: removed animate-in/slide animation so overlay disappears instantly on close */}
       {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-white z-50 animate-in slide-in-from-right duration-300 overflow-y-auto">
+        <div className="lg:hidden fixed inset-0 bg-white z-50 overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <Link to="/" className="text-2xl font-bold text-gray-900 tracking-tight cursor-pointer">Active Core</Link>
             <button onClick={() => setIsMenuOpen(false)} className="cursor-pointer text-gray-600 hover:text-gray-800 transition-colors p-2">
@@ -238,11 +246,7 @@ export default function Navbar() {
               {isMobileSearchOpen && searchValue && (
                 <MobileSearchResults
                   value={searchValue}
-                  onSelect={() => {
-                    setIsMenuOpen(false);
-                    setIsMobileSearchOpen(false);
-                    setSearchValue('');
-                  }}
+                  onSelect={handleMobileProductSelect}
                 />
               )}
             </div>
@@ -298,11 +302,14 @@ export default function Navbar() {
   );
 }
 
+
 /* ── Inline mobile search results ── */
+// FIX: uses onMouseDown + onTouchEnd instead of onClick to avoid iOS Safari
+// swallowing tap events inside overflow-y-auto scrollable containers.
+// onSelect receives the slug and navigation is handled by the parent Navbar.
 function MobileSearchResults({ value, onSelect }) {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!value.trim()) { setProducts([]); return; }
@@ -320,13 +327,10 @@ function MobileSearchResults({ value, onSelect }) {
     return () => clearTimeout(delay);
   }, [value]);
 
-  const handleProductClick = (slug) => {
-    // Navigate first — before any state changes unmount this component
-    navigate(`/product/${slug}`);
-    // Then clean up the menu state after a tiny delay
-    setTimeout(() => {
-      onSelect();
-    }, 50);
+  const handleTap = (e, slug) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(slug);
   };
 
   if (isLoading) return (
@@ -352,7 +356,9 @@ function MobileSearchResults({ value, onSelect }) {
       {products.map((product) => (
         <div
           key={product.id}
-          onClick={() => handleProductClick(product.slug)}
+          onMouseDown={(e) => handleTap(e, product.slug)}
+          onTouchEnd={(e) => handleTap(e, product.slug)}
+          style={{ touchAction: 'manipulation' }}
           className="flex items-center space-x-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
         >
           <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
