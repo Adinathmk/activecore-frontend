@@ -4,7 +4,10 @@ import { toast } from "sonner";
 let socket = null;
 let reconnectTimeout = null;
 
-const RECONNECT_DELAY = 3000; // 3 seconds
+const BASE_DELAY = 3000; // 3s
+const MAX_RECONNECT_ATTEMPTS = 3;
+
+let reconnectAttempts = 0;
 
 function getWebSocketURL() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -14,19 +17,22 @@ function getWebSocketURL() {
 }
 
 export const connectNotificationSocket = (dispatch) => {
-  // Prevent duplicate connections
+
+  // Prevent duplicate connection
   if (socket && socket.readyState !== WebSocket.CLOSED) {
     return;
   }
 
-  const wsUrl =
-    import.meta.env.VITE_WS_URL || getWebSocketURL();
+  const wsUrl = import.meta.env.VITE_WS_URL || getWebSocketURL();
 
   try {
     socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       console.log("WebSocket connected:", wsUrl);
+
+      // reset reconnect attempts
+      reconnectAttempts = 0;
 
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
@@ -45,6 +51,7 @@ export const connectNotificationSocket = (dispatch) => {
             description: "New Notification Received",
           });
         }
+
       } catch (err) {
         console.error("Error parsing WebSocket message:", err);
       }
@@ -55,7 +62,7 @@ export const connectNotificationSocket = (dispatch) => {
     };
 
     socket.onclose = () => {
-      console.warn("WebSocket disconnected. Reconnecting...");
+      console.warn("WebSocket disconnected");
       scheduleReconnect(dispatch);
     };
 
@@ -66,19 +73,37 @@ export const connectNotificationSocket = (dispatch) => {
 };
 
 function scheduleReconnect(dispatch) {
+
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error("Max WebSocket reconnect attempts reached. Stopping reconnect.");
+    return;
+  }
+
   if (!reconnectTimeout) {
+
+    reconnectAttempts++;
+
+    const delay = BASE_DELAY * reconnectAttempts; // exponential backoff
+
+    console.log(
+      `Reconnecting WebSocket in ${delay / 1000}s (attempt ${reconnectAttempts})`
+    );
+
     reconnectTimeout = setTimeout(() => {
       reconnectTimeout = null;
       connectNotificationSocket(dispatch);
-    }, RECONNECT_DELAY);
+    }, delay);
   }
 }
 
 export const disconnectNotificationSocket = () => {
+
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
   }
+
+  reconnectAttempts = 0;
 
   if (socket) {
     socket.onclose = null;
@@ -86,11 +111,3 @@ export const disconnectNotificationSocket = () => {
     socket = null;
   }
 };
-
-
-
-
-
-
-
-
