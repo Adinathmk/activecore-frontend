@@ -73,10 +73,10 @@ const IconLogo = () => (
    Suggestion chips shown on first open
 ───────────────────────────────────────────── */
 const CHIPS = [
-  "Compression tights",
-  "Best sports bras",
+  "Best gym outfit",
+  "What to buy today",
   "Running shoes guide",
-  "What's on sale?",
+  "Best tshirt for gym",
 ];
 
 /* ─────────────────────────────────────────────
