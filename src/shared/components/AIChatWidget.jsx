@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   connectChatSocket,
   sendChatMessage,
@@ -93,6 +94,8 @@ export default function AIChatWidget() {
   const msgListRef = useRef(null);
   const inputRef = useRef(null);
 
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
   /* ── Load history + connect socket ── */
   useEffect(() => {
     axiosInstance
@@ -157,6 +160,8 @@ export default function AIChatWidget() {
 
   /* ── Greeting message (shown when no history) ── */
   const showGreeting = historyLoaded && messages.length === 0;
+
+  if (!isAuthenticated) return null;
 
   return (
     <>
