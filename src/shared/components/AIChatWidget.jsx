@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   connectChatSocket,
   sendChatMessage,
@@ -80,6 +80,24 @@ const CHIPS = [
 ];
 
 /* ─────────────────────────────────────────────
+   Hook: detect mobile viewport
+───────────────────────────────────────────── */
+function useIsMobile(breakpoint = 480) {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= breakpoint
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+/* ─────────────────────────────────────────────
    Main Component
 ───────────────────────────────────────────── */
 export default function AIChatWidget() {
@@ -92,13 +110,30 @@ export default function AIChatWidget() {
 
   const msgListRef = useRef(null);
   const inputRef = useRef(null);
+  const isMobile = useIsMobile(480);
+
+  /* ── Prevent body scroll when chat is open on mobile ── */
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = isOpen ? "hidden" : "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, isMobile]);
 
   /* ── Load history + connect socket ── */
   useEffect(() => {
     axiosInstance
       .get("/api/chat/history/")
       .then((res) => {
-        setMessages(res.data);
+        // Normalize role names: "assistant"/"bot" → "ai", everything else → "user"
+        const normalized = (res.data || []).map((msg) => ({
+          ...msg,
+          role: msg.role === "user" ? "user" : "ai",
+          text: msg.text || msg.content || msg.message || "",
+        }));
+        setMessages(normalized);
         setHistoryLoaded(true);
       })
       .catch((err) => {
@@ -113,6 +148,7 @@ export default function AIChatWidget() {
         { role: "ai", text: data.response },
       ]);
     });
+
 
     return () => disconnectChatSocket();
   }, []);
@@ -132,7 +168,7 @@ export default function AIChatWidget() {
   }, [isOpen]);
 
   /* ── Send a message ── */
-  const handleSend = (text = input) => {
+  const handleSend = useCallback((text = input) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -140,13 +176,13 @@ export default function AIChatWidget() {
     setInput("");
     setIsTyping(true);
     sendChatMessage(trimmed);
-  };
+  }, [input]);
 
-  const handleChip = (chip) => {
+  const handleChip = useCallback((chip) => {
     if (usedChips.includes(chip)) return;
     setUsedChips((prev) => [...prev, chip]);
     handleSend(chip);
-  };
+  }, [usedChips, handleSend]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -164,6 +200,7 @@ export default function AIChatWidget() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Sora:wght@400;500;600&display=swap');
 
+        /* ── FAB ── */
         .acw-fab {
           width: 58px;
           height: 58px;
@@ -174,12 +211,20 @@ export default function AIChatWidget() {
           display: flex;
           align-items: center;
           justify-content: center;
-          position: relative;
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
           border: none;
           outline: none;
           transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease, opacity 0.2s ease;
           animation: acwFabBounce 2.8s ease-in-out infinite;
-          flex-shrink: 0;
+          z-index: 9998;
+        }
+        @media (max-width: 480px) {
+          .acw-fab {
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            right: 20px;
+          }
         }
         .acw-fab:hover {
           transform: scale(1.08) !important;
@@ -213,6 +258,7 @@ export default function AIChatWidget() {
           100% { transform: scale(1.35); opacity: 0;   }
         }
 
+        /* ── Chat Box ── */
         .acw-box {
           position: fixed;
           bottom: 90px;
@@ -233,12 +279,42 @@ export default function AIChatWidget() {
           z-index: 9999;
           font-family: 'DM Sans', sans-serif;
         }
+
+        /* Tablet: slightly wider */
+        @media (min-width: 481px) and (max-width: 768px) {
+          .acw-box {
+            width: min(400px, calc(100vw - 32px));
+            height: min(560px, calc(100vh - 120px));
+            bottom: 90px;
+            right: 16px;
+          }
+        }
+
+        /* Mobile: full screen sheet */
+        @media (max-width: 480px) {
+          .acw-box {
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            bottom: 0;
+            right: 0;
+            transform-origin: bottom center;
+            transform: translateY(100%);
+            box-shadow: none;
+          }
+          .acw-box.acw-box-open {
+            transform: translateY(0) !important;
+          }
+        }
+
         .acw-box.acw-box-open {
           transform: scale(1) translateY(0);
           opacity: 1;
           pointer-events: all;
         }
 
+        /* ── Header ── */
         .acw-header {
           background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
           padding: 16px 18px 14px;
@@ -246,6 +322,11 @@ export default function AIChatWidget() {
           align-items: center;
           gap: 12px;
           flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+          .acw-header {
+            padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
+          }
         }
         .acw-header-avatar {
           width: 38px;
@@ -299,12 +380,18 @@ export default function AIChatWidget() {
           transition: background 0.15s;
           margin-left: auto;
           flex-shrink: 0;
+          /* Larger tap target on mobile */
+          min-width: 44px;
+          min-height: 44px;
         }
         .acw-close-btn:hover { background: rgba(255,255,255,0.22); }
 
+        /* ── Messages ── */
         .acw-messages {
           flex: 1;
           overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
           padding: 16px;
           display: flex;
           flex-direction: column;
@@ -312,16 +399,33 @@ export default function AIChatWidget() {
           background: #f8f9fc;
           scroll-behavior: smooth;
         }
+        @media (max-width: 480px) {
+          .acw-messages {
+            padding: 12px;
+            gap: 8px;
+          }
+        }
         .acw-messages::-webkit-scrollbar { width: 4px; }
         .acw-messages::-webkit-scrollbar-track { background: transparent; }
         .acw-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
         .acw-msg-row {
           display: flex;
+          align-items: flex-end;
           gap: 8px;
+          width: 100%;
           animation: acwMsgIn 0.3s cubic-bezier(.34,1.56,.64,1) both;
         }
-        .acw-msg-row.user { flex-direction: row-reverse; }
+        /* User messages: avatar + bubble pushed to right */
+        .acw-msg-row.user {
+          flex-direction: row-reverse;
+          justify-content: flex-start;
+        }
+        /* AI messages: avatar + bubble on left */
+        .acw-msg-row.ai {
+          flex-direction: row;
+          justify-content: flex-start;
+        }
         @keyframes acwMsgIn {
           from { opacity: 0; transform: translateY(10px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0)    scale(1);    }
@@ -330,26 +434,34 @@ export default function AIChatWidget() {
         .acw-avatar {
           width: 28px;
           height: 28px;
+          min-width: 28px;
           border-radius: 9px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 600;
           flex-shrink: 0;
           align-self: flex-end;
           font-family: 'DM Sans', sans-serif;
+          line-height: 1;
         }
         .acw-avatar.ai   { background: linear-gradient(135deg,#1a1a2e,#0f3460); color:#fff; }
         .acw-avatar.user { background: linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; }
 
         .acw-bubble {
-          max-width: 240px;
+          max-width: min(240px, calc(100% - 44px));
           padding: 10px 13px;
           font-size: 13.5px;
           line-height: 1.55;
           word-break: break-word;
-          border-radius: 16px;
+          overflow-wrap: anywhere;
+        }
+        @media (max-width: 480px) {
+          .acw-bubble {
+            max-width: calc(100% - 44px);
+            font-size: 14px;
+          }
         }
         .acw-bubble.ai {
           background: #fff;
@@ -364,6 +476,7 @@ export default function AIChatWidget() {
           box-shadow: 0 4px 12px rgba(15,52,96,0.3);
         }
 
+        /* ── Typing indicator ── */
         .acw-typing {
           background: #fff;
           border-radius: 4px 16px 16px 16px;
@@ -387,6 +500,7 @@ export default function AIChatWidget() {
           50%       { transform: translateY(-4px); opacity: 1;   }
         }
 
+        /* ── Chips ── */
         .acw-chips {
           display: flex;
           gap: 6px;
@@ -405,6 +519,15 @@ export default function AIChatWidget() {
           font-family: 'DM Sans', sans-serif;
           white-space: nowrap;
           outline: none;
+          /* Mobile: easier to tap */
+          min-height: 34px;
+        }
+        @media (max-width: 480px) {
+          .acw-chip {
+            font-size: 12.5px;
+            padding: 6px 14px;
+            min-height: 38px;
+          }
         }
         .acw-chip:hover:not(:disabled) {
           background: #1a1a2e;
@@ -416,8 +539,10 @@ export default function AIChatWidget() {
           cursor: not-allowed;
         }
 
+        /* ── Input area ── */
         .acw-input-wrap {
           padding: 12px 14px;
+          padding-bottom: calc(12px + env(safe-area-inset-bottom));
           background: #fff;
           border-top: 1px solid #eef0f4;
           display: flex;
@@ -436,6 +561,12 @@ export default function AIChatWidget() {
           padding: 0 12px;
           min-height: 42px;
         }
+        @media (max-width: 480px) {
+          .acw-input-inner {
+            min-height: 48px;
+            border-radius: 16px;
+          }
+        }
         .acw-input-inner:focus-within {
           background: #fff;
           border-color: #0f3460;
@@ -450,6 +581,12 @@ export default function AIChatWidget() {
           font-family: 'DM Sans', sans-serif;
           color: #1e293b;
           padding: 10px 0;
+          /* Prevent iOS zoom on focus (font-size must be >= 16px to suppress) */
+        }
+        @media (max-width: 480px) {
+          .acw-input {
+            font-size: 16px;
+          }
         }
         .acw-input::placeholder { color: #94a3b8; }
 
@@ -466,6 +603,13 @@ export default function AIChatWidget() {
           flex-shrink: 0;
           transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s;
           box-shadow: 0 4px 12px rgba(15,52,96,0.35);
+        }
+        @media (max-width: 480px) {
+          .acw-send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+          }
         }
         .acw-send-btn:hover:not(:disabled) {
           transform: scale(1.08);
@@ -492,7 +636,6 @@ export default function AIChatWidget() {
       {/* ── Floating Action Button ── */}
       <button
         className={`acw-fab${isOpen ? " acw-fab-hidden" : ""}`}
-        style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9998 }}
         onClick={() => setIsOpen(true)}
         aria-label="Open ActiveCore Assistant"
       >
@@ -500,9 +643,28 @@ export default function AIChatWidget() {
         <IconChat />
       </button>
 
-      {/* ── Chat Box ── */}
-      <div className={`acw-box${isOpen ? " acw-box-open" : ""}`} role="dialog" aria-label="ActiveCore Assistant">
+      {/* ── Mobile backdrop ── */}
+      {isMobile && isOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 9998,
+            backdropFilter: "blur(2px)",
+          }}
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
+      {/* ── Chat Box ── */}
+      <div
+        className={`acw-box${isOpen ? " acw-box-open" : ""}`}
+        role="dialog"
+        aria-label="ActiveCore Assistant"
+        aria-modal="true"
+      >
         {/* Header */}
         <div className="acw-header">
           <div className="acw-header-avatar">
@@ -530,7 +692,7 @@ export default function AIChatWidget() {
           {/* Greeting */}
           {showGreeting && (
             <>
-              <div className="acw-msg-row">
+              <div className="acw-msg-row ai">
                 <div className="acw-avatar ai">AC</div>
                 <div className="acw-bubble ai">
                   Hey there! I'm your ActiveCore assistant. How can I help you find the perfect workout gear today?
@@ -552,18 +714,21 @@ export default function AIChatWidget() {
           )}
 
           {/* Message history */}
-          {messages.map((msg, i) => (
-            <div key={i} className={`acw-msg-row ${msg.role}`}>
-              <div className={`acw-avatar ${msg.role}`}>
-                {msg.role === "ai" ? "AC" : "You"}
+          {messages.map((msg, i) => {
+            const isUser = msg.role === "user";
+            return (
+              <div key={i} className={`acw-msg-row ${isUser ? "user" : "ai"}`}>
+                <div className={`acw-avatar ${isUser ? "user" : "ai"}`}>
+                  {isUser ? "U" : "AC"}
+                </div>
+                <div className={`acw-bubble ${isUser ? "user" : "ai"}`}>{msg.text}</div>
               </div>
-              <div className={`acw-bubble ${msg.role}`}>{msg.text}</div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Typing indicator */}
           {isTyping && (
-            <div className="acw-msg-row">
+            <div className="acw-msg-row ai">
               <div className="acw-avatar ai">AC</div>
               <div className="acw-typing">
                 <div className="acw-typing-dot" />
@@ -585,6 +750,7 @@ export default function AIChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               autoComplete="off"
+              enterKeyHint="send"
             />
           </div>
           <button

@@ -593,7 +593,7 @@ export default function Home() {
             <p className="disp" style={{ fontSize: 'clamp(2.2rem,6vw,5rem)', fontWeight: 900, color: '#f2f1ed', letterSpacing: '0.03em', lineHeight: 0.9 }}>
               BUILT FOR<br />THE BOLD
             </p>
-            <button className="btn-ghost-light" style={{ flexShrink: 0 }} onClick={() => navigate('/products/all')}>
+            <button className="btn-ghost-light" style={{ flexShrink: 0 }} onClick={() => navigate('/products/men')}>
               Shop Now <ArrowRight size={12} />
             </button>
           </div>
