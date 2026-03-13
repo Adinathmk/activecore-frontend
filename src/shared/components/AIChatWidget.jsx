@@ -127,6 +127,8 @@ export default function AIChatWidget() {
 
   /* ── Load history + connect socket ── */
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     axiosInstance
       .get("/api/chat/history/")
       .then((res) => {
@@ -154,7 +156,7 @@ export default function AIChatWidget() {
 
 
     return () => disconnectChatSocket();
-  }, []);
+  }, [isAuthenticated]);
 
   /* ── Auto-scroll to bottom on new messages ── */
   useEffect(() => {
