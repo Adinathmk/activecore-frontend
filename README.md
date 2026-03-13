@@ -55,6 +55,7 @@ This repository contains the **frontend** application. The backend is built sepa
 - **Authentication** — Email/password login, Google OAuth, OTP verification, forgot/reset password
 - **User Profile** — Manage personal details and account settings
 - **Real-Time Notifications** — WebSocket-powered notification bell with live updates
+- **AI Assistant Chatbot** — Floating chat widget powered by an AI backend via WebSockets, with persistent chat history, suggestion chips, and a typing indicator
 
 ### 🔐 Admin Dashboard
 - **Dashboard Analytics** — Key metrics with animated charts (Chart.js) and count-up statistics
@@ -86,7 +87,7 @@ This repository contains the **frontend** application. The backend is built sepa
 | **HTTP Client** | Axios (with interceptors) |
 | **Payments** | Stripe (React Stripe.js) |
 | **Authentication** | JWT + Google OAuth (`@react-oauth/google`) |
-| **Real-Time** | WebSockets (custom `notificationSocket` service) |
+| **Real-Time** | WebSockets (`notificationSocket` for notifications, `chatSocket` for AI chat) |
 | **Animations** | GSAP v3 + Motion (Framer Motion) |
 | **Charts** | Chart.js v4 |
 | **PDF Generation** | jsPDF + jsPDF-AutoTable |
@@ -125,11 +126,12 @@ src/
 ├── services/
 │   ├── axiosInstance.js        # Axios with auth interceptors & token refresh
 │   ├── apiBase.js              # RTK Query base API configuration
-│   ├── notificationSocket.js   # WebSocket connection manager
+│   ├── notificationSocket.js   # WebSocket connection manager for notifications
+│   ├── chatSocket.js           # WebSocket connection manager for AI chat
 │   └── stripe.js               # Stripe initialization
 │
 ├── shared/
-│   ├── components/             # Reusable UI: Navbar, Footer, Modals, Loaders
+│   ├── components/             # Reusable UI: Navbar, Footer, Modals, Loaders, AIChatWidget
 │   └── utils/                  # Helper functions & animation utilities
 │
 └── components/
@@ -184,6 +186,9 @@ VITE_API_BASE_URL=http://localhost:8000/api
 # WebSocket URL for real-time notifications
 VITE_WS_BASE_URL=ws://localhost:8000/ws
 
+# WebSocket URL for AI chat (defaults to ws://localhost:8000/ws/chat/ if not set)
+VITE_CHAT_WS_URL=ws://localhost:8000/ws/chat/
+
 # Stripe publishable key
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxx
 
@@ -227,6 +232,9 @@ Three route guards protect navigation:
 
 ### Real-Time Notifications
 A custom `notificationSocket.js` service manages the WebSocket lifecycle (connect, reconnect, message dispatch) and integrates with the Redux notification slice to update the UI live.
+
+### AI Assistant Chatbot
+A floating `AIChatWidget` component provides an always-available chat interface. It connects to the backend AI service via `chatSocket.js` (WebSocket at `/ws/chat/`). On mount, chat history is fetched from `/api/chat/history/`. User messages are sent over the socket and AI responses are streamed back in real time. The widget features suggestion chips, a typing indicator, and persisted conversation history.
 
 
 ---

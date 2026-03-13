@@ -8,6 +8,7 @@ import { fetchWishlist, resetWishlist } from "@/features/wishlist/wishlistSlice"
 import { fetchCart, resetCart } from "@/features/cart/cartSlice";
 import { fetchNotifications } from "@/features/notifications/notificationSlice";
 import { connectNotificationSocket, disconnectNotificationSocket } from "@/services/notificationSocket";
+import AIChatWidget from "@/shared/components/AIChatWidget";
 
 function App() {
   const dispatch = useDispatch();
@@ -47,6 +48,7 @@ function App() {
       <Toaster position="top-right" richColors />
       <ScrollToTop />
       <AppRoutes />
+      <AIChatWidget />
     </>
   );
 }

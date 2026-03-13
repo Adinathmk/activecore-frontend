@@ -116,10 +116,12 @@ activecore-frontend/
     ├── services/
     │   ├── apiBase.js
     │   ├── axiosInstance.js
+    │   ├── chatSocket.js
     │   ├── notificationSocket.js
     │   └── stripe.js
     └── shared/
         ├── components/
+        │   ├── AIChatWidget.jsx
         │   ├── BannerSlider.jsx
         │   ├── BuyingModal.jsx
         │   ├── Footer.jsx
